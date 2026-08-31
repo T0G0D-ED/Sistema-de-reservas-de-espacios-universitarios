@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva de salas</title>
+    <link rel="icon" type="image/png" href="assets\favicon.png" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">    <style type="text/tailwindcss">
+  @theme {
+    /* Paleta de colores */ 
+    --color-verdeApex: #CCFF00;
+    --color-negroBoton: #18181C;
+    --color-border-header: #1E1E24;
+    --color-grayApex: #8E8E93;
+    --color-negroIcon: #121215;
+    --font-Inter: "inter", sans-serif;
+    --font-Poppins: "Poppins", sans-serif;
+  } 
+  </style>
+</head>
+<body>
+    <header class="text-gray-600 font-Poppins">
+  <div class="container mx-auto flex flex-wrap p-5 flex-col md:flex-row items-center">
+    <a class="flex title-font font-medium items-center text-gray-900 mb-4 md:mb-0">
+    <img src="assets/logo-unab.png" class="w-35 h-15 text-white p-2">
+    
+      <span class="ml-3 text-xl text-bold">ReservaUNAB</span>
+      
+    </a>
+    <div class="flex items-center gap-2 md:mt-0">
+    <nav class="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400	flex flex-wrap items-center text-base justify-center">
+      <a href="#" class="mr-5 flex items-center px-4  hover:text-black">Espacios</a>
+      <a href="#" class="mr-5 hover:text-black">Mis reservas</a>
+    </nav>
+    </div>
+  </div>
+</header>
+<main class="container mx-auto px-5 py-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-black">Espacios Disponibles</h1>
+        <p class="text-black mt-1">Consulta y reserva salas, laboratorios y espacios universitarios.</p>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+        <label class="relative block mb-4">
+            <img src="assets/lupa.png" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-4">
+            <input type="text" placeholder="Buscar por nombre, edificio o características..."
+                class="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </label>
+
+        <div class="flex flex-wrap gap-3">
+            <select class="px-7 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>Todos los edificios</option>
+                <option>Edificio A</option>
+                <option>Edificio B</option>
+                <option>Edificio C</option>
+                <option>Edificio D</option>
+                <option>Edificio E</option>
+            </select>
+            <select class="px-7 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>Tipo: Todos</option>
+            </select>
+            <select class="px-7 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>Capacidad: Todas</option>
+            </select>
+        </div>
+    </div>
+</main>
+</body>
+</html>
