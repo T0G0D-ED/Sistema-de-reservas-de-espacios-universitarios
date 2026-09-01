@@ -1,11 +1,11 @@
-import {espacios} from "Sistema-de-reservas-de-espacios-universitarios/public/data/espacios.js";
+import { espacios } from "../public/data/espacios.js"
 
 function crearTarjeta(espacio) {
     const tpl=document.getElementById("tarjeta");
     const nodo=tpl.content.cloneNode(true);
 
     nodo.querySelector("[data-slot=cover]").style.background=espacio.cover;
-    nodo.querySelector("[data-slot=icon]").style.background=espacio.icon;
+    nodo.querySelector("[data-slot=icon]").textContent =espacio.icon;
     nodo.querySelector("[data-slot=nombre]").textContent=espacio.nombre;
     nodo.querySelector("[data-slot=lugar]").textContent=espacio.lugar;
     nodo.querySelector("[data-slot=descripcion]").textContent=espacio.descripcion;
