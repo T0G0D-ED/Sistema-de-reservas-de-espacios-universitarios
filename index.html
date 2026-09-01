@@ -17,25 +17,31 @@
     --color-border-header: #1E1E24;
     --color-grayApex: #8E8E93;
     --color-negroIcon: #121215;
+    --color-azulUnab: #263762;
+    --color-azulClaroUnab: #3B5597;
+    --color-rojoUnab: #d03437;
     --font-Poppins: "Poppins", sans-serif;
   } 
   </style>
 </head>
 <body>
     <header class="text-gray-600 font-Poppins">
-  <div class="container mx-auto flex flex-wrap p-5 flex-col md:flex-row items-center">
-    <a class="flex title-font font-medium items-center text-gray-900 mb-4 md:mb-0">
-    <img src="assets/logo-unab.png" class="w-35 h-15 text-white p-2">
+  <div class="container mx-auto flex flex-col md:flex-row items-center justify-between p-5">
     
-      <span class="ml-3 text-xl text-bold">ReservaUNAB</span>
-      
+    <a href="#" class="flex items-center  text-gray-900 mb-4 md:mb-0">
+      <img src="assets/logo-unab.png" alt="Logo UNAB" class="w-35 h-15 p-2 ">
+      <span class="ml-3 text-xl text-azulUnab font-semibold md:border-l md:border-gray-400 md:pl-4">ReservaUNAB</span>
     </a>
-    <div class="flex items-center gap-2 md:mt-0">
-    <nav class="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400	flex flex-wrap items-center text-base justify-center">
-      <a href="#" class="mr-5 flex items-center px-4  hover:text-black">Espacios</a>
-      <a href="#" class="mr-5 hover:text-black">Mis reservas</a>
+
+    <nav class="flex items-center text-base md:pl-5 md:ml-5">
+      <a href="#" class="mr-5  hover:font-bold hover:underline hover:text-azulUnab">Espacios</a>
+      <a href="#" class="mr-5  hover:font-bold hover:underline  hover:text-azulUnab">Mis reservas</a>
     </nav>
-    </div>
+
+<a href="#" class="px-4 py-2 bg-azulUnab text-white rounded-full  transition-colors md:ml-auto font-light hover:bg-azulClaroUnab  hover:underline hover:text-white ">
+  <img src="assets/icono-login.png" alt="Login" class="inline-block w-6 h-6 ml-0 mr-1">
+  ACCESO INTRANET
+</a>
   </div>
 </header>
 <main class="container mx-auto px-5 py-8">
@@ -47,7 +53,7 @@
     <div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
         <label class="relative block mb-4">
             <img src="assets/lupa.png" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-4">
-            <input type="text" placeholder="Buscar por nombre, edificio o características..."
+            <input type="text" placeholder="Buscar por nombre, edificio o capacidad..."
                 class="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
         </label>
 
@@ -79,7 +85,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="espacios-grid"></div>
             <template id="tarjeta">
-              <article class="bg-white border border-gray rounded-xl overflow-hidden flex flex-col">
+              <article class="bg-white border border-gray rounded-xl overflow-hidden flex flex-col hover:shadow-xl/40 shadow-azulUnab transition-shadow duration-300">
                 <div class="relative h-40 flex items-center justify-center" data-slot="cover">
                   <span class="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/25 backdrop-blur text-white text-xs font-medium" data-slot="nombre"></span>
                   <span class="text-5xl" data-slot="icon"></span>
