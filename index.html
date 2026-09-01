@@ -77,8 +77,30 @@
         </div>
             <p class="text-sm text-black mb-0 mt-4">X de Y espacios disponibles</p>
 
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="espacios-grid">
+            <template id="tarjeta">
+              <article class="bg-white border border-gray rounded-xl overflow-hidden flex flex-col">
+                <div class="relative h-40 flex items-center justify-center" data-slot="cover">
+                  <span class="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/25 backdrop-blur text-white text-xs font-medium" data-slot="nombre"></span>
+                  <span class="text-5xl" data-slot="icon"></span>
+                </div>
+                <div class="p-5 flex flex-col flex-1">
+                  <h3 class="text-lg font-semibold text-gray" data-slot="titulo"></h3>
+                  <p class="text-sm text-blue mb-2" data-slot="lugar"></p>
+                  <p class="text-sm text-gray mb-2" data-slot="descripcion"></p>
+                  <p class="text-sm text-gray mb-2" data-slot="aforo"></p>
+                  <div class="flex flex-wrap gap-2 mb-4" data-slot="tags"></div>
+                  <button type="button" class="mt-auto w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">
+                    Solcitar reserva
+                  </button>
+                </div>
+              </article>
+            </template>
+            </div>
     </div>
     
+    
 </main>
+<script src="js/main.js" defer></script>
 </body>
 </html>
