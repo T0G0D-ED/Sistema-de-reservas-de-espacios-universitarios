@@ -1,4 +1,4 @@
-import { espacios } from "../public/data/espacios.js"
+import { espacios } from "../data/espacios.js"
 
 function crearTarjeta(espacio) {
     const tpl=document.getElementById("tarjeta");
