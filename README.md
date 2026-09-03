@@ -14,7 +14,7 @@ Actualmente, la disponibilidad de espacios en la universidad (salas, laboratorio
 
 * **HTML5:** Para armar la estructura de la página.
 * **CSS3:** Para darle estilo propio y ajustar detalles visuales.
-* **Bootstrap:** Para el sistema de grillas, diseño responsive y componentes rápidos.
+* **Tailwind:** Para darle diseño, color y forma a la página de manera rápida, poniendo clases directo en el HTML.
 * **JavaScript:** Para mejorar la página, entre esto simular datos, manejar el formulario de reservas, validar campos y actualizar la vista.
 * **Git / GitHub / Git Flow / VisualStudioCode:** Para trabajar en equipo, llevar el control de versiones y juntar el código.
 
