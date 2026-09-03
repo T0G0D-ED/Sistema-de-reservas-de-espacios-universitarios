@@ -1,4 +1,4 @@
-import { espacios } from "../public/data/espacios.js";
+import { espacios } from "../data/espacios.js"
 
 // ---CAPTURA DE ELEMENTOS DEL DOM ---
 // Guardando las referencias a los elementos HTML en constantes para no buscarlos en el DOM de forma frecuente
