@@ -1,7 +1,6 @@
 import { espacios } from "../data/espacios.js"
 
 // ---CAPTURA DE ELEMENTOS DEL DOM ---
-// Guardando las referencias a los elementos HTML en constantes para no buscarlos en el DOM de forma frecuente
 const inputBuscar = document.getElementById("input-buscar");
 const selectEdificio = document.getElementById("select-edificio");
 const selectTipo = document.getElementById("select-tipo");
@@ -9,9 +8,7 @@ const selectCapacidad = document.getElementById("select-capacidad");
 const contadorEspacios = document.getElementById("contador-espacios");
 const gridEspacios = document.getElementById("espacios-grid");
 
-// ---FUNCIONES DE COMPARACIÓN Y FILTRADO ---
-// Funcion auxiliar que se encarga solo de una cosa
-// Ve si la capacidad de un espacio cumple con la seleccionada por el usuario
+// ---FUNCIONES DE COMPARACION Y FILTRADO ---
 function coincideCapacidad(capacidadNumero, filtroSeleccionado) {
   if (!filtroSeleccionado) return true; // Si value="" (no hay filtro) , deja pasar todos
   if (filtroSeleccionado === "Pequeña") return capacidadNumero <= 15;
@@ -22,26 +19,24 @@ function coincideCapacidad(capacidadNumero, filtroSeleccionado) {
 
 //Funcion principal de filtrado que se ejecuta cada vez que el usuario cambia un filtro
 function filtrarEspacios() {
-	// Obtener los valores actuales de los inputs
   const texto = inputBuscar.value.toLowerCase().trim();
   const edificioSeleccionado = selectEdificio.value;
   const tipoSeleccionado = selectTipo.value;
   const capacidadSeleccionada = selectCapacidad.value;
 
-	//.filter() para crear un nuevo array solo con los elementos que cumplan la condicion
   const resultado = espacios.filter(espacio => {
   
-    // Coincidencia de texto: busca en título, descripción o en los tags
+    // Coincidencia de texto
     const coincideTexto = 
       espacio.titulo.toLowerCase().includes(texto) ||
       espacio.descripcion.toLowerCase().includes(texto) ||
       espacio.tags.some(tag => tag.toLowerCase().includes(texto));
 
-    // Coincidencias exactas. Si select vacio evalua true !!!!
+    // Coincidencias exactas.
     const coincideEdificio = !edificioSeleccionado || espacio.edificio === edificioSeleccionado;
     const coincideTipo = !tipoSeleccionado || espacio.tipo.toLowerCase() === tipoSeleccionado.toLowerCase();
     
-    // Coincidencia por rango numérico con funcion auxiliar
+    // Coincidencia con funcion auxiliar
     const cumpleCapacidad = coincideCapacidad(espacio.capacidad, capacidadSeleccionada);
 
 		//Espacio pasa el filtro si cumple con todas las condiciones
@@ -57,7 +52,7 @@ function filtrarEspacios() {
   }
 }
 
-// ---RENDERIZADO ---
+// RENDERIZADO
 function crearTarjeta(espacio) {
   const tpl = document.getElementById("tarjeta");
   const nodo = tpl.content.cloneNode(true);
@@ -86,15 +81,11 @@ function renderizarTarjetas(lista) {
 }
 
 // ---ASIGNACIÓN DE EVENTOS ---
-// Usamos 'input' en el buscador para respuesta inmediata mientras escribe
-//se dispara en cada tecla que el usuario presiona
 inputBuscar.addEventListener("input", filtrarEspacios);
 
-// Usamos 'change' en los selects para reaccionar a la nueva opción elegida
 selectEdificio.addEventListener("change", filtrarEspacios);
 selectTipo.addEventListener("change", filtrarEspacios);
 selectCapacidad.addEventListener("change", filtrarEspacios);
 
 // ---CARGA INICIAL ---
-// Se llama a la funcion una vez al cargar el script
 filtrarEspacios();

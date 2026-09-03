@@ -3,7 +3,6 @@ export const espacios = [
     id: 1,
     titulo: "Aula Magna A-101",
 
-    // Propiedades normalizadas (para lógica/filtros)
     edificio: "Edificio A",
     tipo: "Sala de clases",
     capacidad: 80,
