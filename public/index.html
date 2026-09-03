@@ -50,38 +50,51 @@
         <p class="text-black mt-1">Consulta y reserva salas, laboratorios y espacios universitarios.</p>
     </div>
 
+
+
     <div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
         <label class="relative block mb-4">
             <img src="assets/lupa.png" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-4">
-            <input type="text" placeholder="Buscar por nombre, edificio o capacidad..."
+            <input 
+                id="input-buscar"
+                type="text" 
+                placeholder="Buscar por nombre, edificio o características..."
                 class="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
         </label>
 
+
         <div class="flex flex-wrap gap-3">
-            <select class="px-7 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option>Todos los edificios</option>
-                <option>Edificio A</option>
-                <option>Edificio B</option>
-                <option>Edificio C</option>
-                <option>Edificio D</option>
-                <option>Edificio E</option>
-                <option>Biblioteca</option>
+        <!--Filtro Edificio: id="select-edificio" y values limpios -->
+            <select id="select-edificio" class="px-7 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Todos los edificios</option>
+                <option value="Edificio A">Edificio A</option>
+                <option value="Edificio B">Edificio B</option>
+                <option value="Edificio C">Edificio C</option>
+                <option value="Edificio D">Edificio D</option>
+                <option value="Edificio E">Edificio E</option>
+                <option value="Biblioteca">Biblioteca</option>
             </select>
-            <select class="px-7 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option>Tipo de sala: Todas</option>
-                <option>Sala de clases</option>
-                <option>Laboratorio</option>
-                <option>Sala de estudio</option>
-                <option>Sala de reunion</option>
+            
+            <!-- Filtro Tipo: id="select-tipo" -->
+            <select id="select-tipo" class="px-7 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Tipo de sala: Todas</option>
+                <option value="Sala de clases">Sala de clases</option>
+                <option value="Laboratorio">Laboratorio</option>
+                <option value="Sala de estudio">Sala de estudio</option>
+                <option value="Sala de reunion">Sala de reunion</option>
             </select>
-            <select class="px-7 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option>Capacidad: Todas</option>
-                <option>Pequeña</option>
-                <option>Mediana</option>
-                <option>Grande</option>
-            </select>
+            
+            <!--Filtro Capacidad: id="select-capacidad" -->
+            <select id="select-capacidad" class="px-7 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Capacidad: Todas</option>
+		            <option value="Pequeña">Pequeña</option>
+		            <option value="Mediana">Mediana</option>
+		            <option value="Grande">Grande</option>
+		        </select>
         </div>
-            <p class="text-sm text-black mb-4 mt-4">X de Y espacios disponibles</p>
+        
+		        <!--Contador: se le agrega el id="contador-espacios" para actualizar el texto de forma dinamica-->
+            <p id="contador-espacios" class="text-sm text-black mb-4 mt-4">X de Y espacios disponibles</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="espacios-grid"></div>
             <template id="tarjeta">
