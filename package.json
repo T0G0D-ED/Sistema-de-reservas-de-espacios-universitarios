@@ -1,3 +1,10 @@
 {
-  "type": "module"
+  "name": "sitema-reserva-de-salas",
+  "version": "1.0.0",
+  "description": "Sistema de reserva de salas para Universidad Andres Bello",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/T0G0D-ED/Sistema-de-reservas-de-espacios-universitarios"
+  }
 }
