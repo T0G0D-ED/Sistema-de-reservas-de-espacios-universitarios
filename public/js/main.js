@@ -83,16 +83,30 @@ function renderizarTarjetas(lista) {
   lista.forEach(espacio => gridEspacios.appendChild(crearTarjeta(espacio)));
 }
 
+
+
 //MODAL
+let espacioSeleccionadoActual = null; //Almacena el objeto del espacio que se reserva
 const modalReserva = document.getElementById("modal-reserva");
 const modalOverlay = document.getElementById("modal-overlay");
 const btnCerrarModal = document.getElementById("modal-cerrar");
 const modalTitulo = document.getElementById("modal-titulo-espacio");
+const btnCancelarModal = document.getElementById("btn-cancelar-modal");
+
+
 
 function abrirModal(espacio) {
   if (espacio) {
+    espacioSeleccionadoActual = espacio; // Guarda la referencia de la sala
     modalTitulo.textContent = `Reservar: ${espacio.titulo}`;
   }
+  // Limpiar campos del form al abrir
+  document.getElementById("form-reserva").reset();
+  contenedorHoras.classList.add("hidden");
+  mensajeHorarios.classList.remove("hidden");
+  inputHoraOculto.value = "";
+
+  //Muestra modal y bloquea scroll
   modalReserva.classList.remove("hidden");
   document.body.classList.add("overflow-hidden");
 }
@@ -100,16 +114,13 @@ function abrirModal(espacio) {
 function cerrarModal() {
   modalReserva.classList.add("hidden");
   document.body.classList.remove("overflow-hidden");
+  espacioSeleccionadoActual = null;
 }
 
 btnCerrarModal.addEventListener("click", cerrarModal);
 modalOverlay.addEventListener("click", cerrarModal);
+if (btnCancelarModal) btnCancelarModal.addEventListener("click", cerrarModal);
 
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !modalReserva.classList.contains("hidden")){
-    cerrarModal();
-  }
-});
 
 document.addEventListener("click", (e) => {
   const btnReservar = e.target.closest(".btn-solicitar-reserva");
@@ -127,7 +138,7 @@ const contenedorHoras=document.getElementById("contenedor-horas");
 const mensajeHorarios=document.getElementById("mensaje-horarios");
 const inputHoraOculto=document.getElementById("reserva-hora-seleccionada");
 
-//esto permite no seleccionar fechas pasadas en el input de fecha
+//Restringe reservas en fechas pasadas
 const hoy=new Date().toISOString().split("T")[0];
 inputFecha.setAttribute("min",hoy);
 
@@ -145,10 +156,9 @@ const horariosDisponibles=[
 ];
 
 inputFecha.addEventListener("change", () => {
-  if (!inputFecha.value) {
+  if (inputFecha.value) {
     mensajeHorarios.classList.add("hidden");
     contenedorHoras.classList.remove("hidden");
-    
     renderizarHorarios(horariosDisponibles);
   } else {
     contenedorHoras.classList.add("hidden");
@@ -156,34 +166,185 @@ inputFecha.addEventListener("change", () => {
   }
 });
 
+//Bloques de tiempo
 function renderizarHorarios(listaHora) {
   contenedorHoras.innerHTML = "";
   inputHoraOculto.value = "";
+  
 
   listaHora.forEach(hora => {
     const btnHora = document.createElement("button");
-    btnHora.textContent=hora;
+    btnHora.type = "button"; // evita que actue como submit del formulario
+    btnHora.textContent = hora;
     btnHora.className="btn-hora px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:border-blue-500 hover:text-blue-600 transition-colors";
 
     btnHora.addEventListener("click", () => {
+	    // Limpia la seleccion visual de los otros botones
       document.querySelectorAll(".btn-hora").forEach(btn =>{
         btn.classList.remove("bg-blue-500", "text-white", "border-blue-500");
-        btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        btn.classList.add("border-gray-300", "text-gray-700");
       });
-        btnHora.classList.remove('border-gray-300', 'text-gray-700');
-        btnHora.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
-        inputHoraOculto.value=hora;
-      });
+
+      // Aplicar estado activo unicamente al boton presionado
+      btnHora.classList.remove('border-gray-300', 'text-gray-700');
+      btnHora.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        
+      // Guarda el horario en el input hidden para el formulario
+      inputHoraOculto.value=hora;
+    });
+
       contenedorHoras.appendChild(btnHora);
     });
   }
 
-// ---ASIGNACIÓN DE EVENTOS ---
+// ---ASIGNACION DE EVENTOS ---
 inputBuscar.addEventListener("input", filtrarEspacios);
-
 selectEdificio.addEventListener("change", filtrarEspacios);
 selectTipo.addEventListener("change", filtrarEspacios);
 selectCapacidad.addEventListener("change", filtrarEspacios);
+
+//NAVEGACION ESPACIOS-RESERVAS
+const navEspacios = document.getElementById("nav-espacios");
+const navReservas = document.getElementById("nav-reservas");
+const vistaEspacios = document.getElementById("vista-espacios");
+const vistaMisReservas = document.getElementById("vista-mis-reservas");
+
+function cambiarVista(vista) {
+  if (vista === "espacios") {
+    vistaEspacios.classList.remove("hidden");
+    vistaMisReservas.classList.add("hidden");
+
+    navEspacios.classList.add("text-azulUnab", "border-b-2", "border-azulUnab", "pb-1");
+    navEspacios.classList.remove("text-gray-500");
+
+    navReservas.classList.remove("text-azulUnab", "border-b-2", "border-azulUnab", "pb-1");
+    navReservas.classList.add("text-gray-500");
+  } else if (vista === "reservas") {
+    vistaEspacios.classList.add("hidden");
+    vistaMisReservas.classList.remove("hidden");
+
+    navReservas.classList.add("text-azulUnab", "border-b-2", "border-azulUnab", "pb-1");
+    navReservas.classList.remove("text-gray-500");
+
+    navEspacios.classList.remove("text-azulUnab", "border-b-2", "border-azulUnab", "pb-1");
+    navEspacios.classList.add("text-gray-500");
+
+    renderizarMisReservas();
+  }
+}
+
+navEspacios.addEventListener("click", () => cambiarVista("espacios"));
+navReservas.addEventListener("click", () => cambiarVista("reservas"));
+
+
+
+
+//GESTION DE RESERVAS Y FORMULARIO
+let reservasRealizadas = []; // Arreglo en memoria para guardar las reservas
+
+const formReserva = document.getElementById("form-reserva");
+const badgeTotalReservas = document.getElementById("badge-total-reservas");
+const contenedorMisReservas = document.getElementById("contenedor-mis-reservas");
+const sinReservas = document.getElementById("sin-reservas");
+
+// Confirmar reserva desde el formulario 
+formReserva.addEventListener("submit", (e) => {
+  e.preventDefault(); //Detiene el envio que hay por defecto de HTTP y se evita la recarga de la pag
+
+  const fecha = inputFecha.value;
+  const hora = inputHoraOculto.value;
+  const nombre = document.getElementById("reserva-nombre").value.trim();
+  const motivo = document.getElementById("reserva-motivo").value.trim();
+
+  // Validacion bloque de horario seleccionado
+  if (!hora) {
+    alert("Por favor selecciona un horario disponible.");
+    return;
+  }
+  
+  // Crear objeto y guardarlo en el arreglo
+  const nuevaReserva = {
+    id: Date.now(),
+    espacioId: espacioSeleccionadoActual.id,
+    espacioTitulo: espacioSeleccionadoActual.titulo,
+    espacioLugar: espacioSeleccionadoActual.lugar,
+    espacioCover: espacioSeleccionadoActual.cover,
+    espacioIcon: espacioSeleccionadoActual.icon,
+    nombre,
+    fecha,
+    hora,
+    motivo
+  };
+
+  reservasRealizadas.push(nuevaReserva);
+
+  if (badgeTotalReservas) badgeTotalReservas.textContent = reservasRealizadas.length;
+
+  cerrarModal();
+  alert(`¡Reserva confirmada con éxito para ${nuevaReserva.espacioTitulo}!`);
+
+  // LLeva directamente a vista reservas para ver la reserva solicitada
+  cambiarVista("reservas");
+});
+
+
+// Renderizar reservas en Mis Reservas
+function renderizarMisReservas() {
+  if (!contenedorMisReservas) return;
+  contenedorMisReservas.innerHTML = "";
+
+  // Si no hay elementos, contenedor en estado vacio
+  if (reservasRealizadas.length === 0) {
+    sinReservas.classList.remove("hidden");
+    return;
+  }
+
+  sinReservas.classList.add("hidden");
+
+  //Tarjetas de reserva
+  reservasRealizadas.forEach(reserva => {
+    const card = document.createElement("article");
+    card.className = "bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col shadow-sm";
+    card.innerHTML = `
+      <div class="h-20 flex items-center justify-between px-5 text-white" style="background: ${reserva.espacioCover}">
+        <span class="text-3xl">${reserva.espacioIcon}</span>
+        <span class="text-xs bg-white/20 backdrop-blur px-2.5 py-1 rounded-full font-medium">Activa</span>
+      </div>
+      <div class="p-5 flex flex-col flex-1">
+        <h3 class="font-bold text-gray-900 text-lg">${reserva.espacioTitulo}</h3>
+        <p class="text-xs text-blue-600 font-medium mb-3">${reserva.espacioLugar}</p>
+        
+        <div class="space-y-1 text-sm text-gray-600 mb-4 flex-1">
+          <p><strong>Fecha:</strong> ${reserva.fecha}</p>
+          <p><strong>Horario:</strong> ${reserva.hora}</p>
+          <p><strong>Solicitante:</strong> ${reserva.nombre}</p>
+          <p><strong>Motivo:</strong> ${reserva.motivo}</p>
+        </div>
+
+        <button type="button" data-id="${reserva.id}" class="btn-eliminar-reserva w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-lg border border-red-200 transition cursor-pointer">
+          Cancelar reserva
+        </button>
+      </div>
+    `;
+    contenedorMisReservas.appendChild(card);
+  });
+}
+
+//Cancelacion de reservas
+document.addEventListener("click", (e) => {
+  const btnCancelar = e.target.closest(".btn-eliminar-reserva");
+  if (btnCancelar) {
+    const id = Number(btnCancelar.dataset.id);
+    //Se conservan las reservas excepto la que se elimino
+    reservasRealizadas = reservasRealizadas.filter(r => r.id !== id);
+
+    if (badgeTotalReservas) badgeTotalReservas.textContent = reservasRealizadas.length;
+
+    renderizarMisReservas();
+    alert("Reserva cancelada correctamente.");
+  }
+});
+
 
 // ---CARGA INICIAL ---
 filtrarEspacios();
