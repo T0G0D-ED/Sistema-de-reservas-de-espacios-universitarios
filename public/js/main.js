@@ -240,7 +240,7 @@ navReservas.addEventListener("click", () => cambiarVista("reservas"));
 
 
 //GESTION DE RESERVAS Y FORMULARIO
-let reservasRealizadas = []; // Arreglo en memoria para guardar las reservas
+let reservasRealizadas = JSON.parse(localStorage.getItem("reservasRealizadas") || "[]");
 
 const formReserva = document.getElementById("form-reserva");
 const badgeTotalReservas = document.getElementById("badge-total-reservas");
@@ -277,6 +277,7 @@ formReserva.addEventListener("submit", (e) => {
   };
 
   reservasRealizadas.push(nuevaReserva);
+  localStorage.setItem("reservasRealizadas", JSON.stringify(reservasRealizadas));
 
   if (badgeTotalReservas) badgeTotalReservas.textContent = reservasRealizadas.length;
 
@@ -337,6 +338,7 @@ document.addEventListener("click", (e) => {
     const id = Number(btnCancelar.dataset.id);
     //Se conservan las reservas excepto la que se elimino
     reservasRealizadas = reservasRealizadas.filter(r => r.id !== id);
+    localStorage.setItem("reservasRealizadas", JSON.stringify(reservasRealizadas));
 
     if (badgeTotalReservas) badgeTotalReservas.textContent = reservasRealizadas.length;
 
@@ -347,4 +349,5 @@ document.addEventListener("click", (e) => {
 
 
 // ---CARGA INICIAL ---
+if (badgeTotalReservas) badgeTotalReservas.textContent = reservasRealizadas.length;
 filtrarEspacios();
