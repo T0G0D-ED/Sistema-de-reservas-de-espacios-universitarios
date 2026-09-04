@@ -52,6 +52,38 @@ function filtrarEspacios() {
   }
 }
 
+//Alertas
+function mostrarAlerta(mensaje, tipo = "info") {
+  const estilos = {
+    danger:  { bg: "bg-rojoUnab/10",  text: "text-rojoUnab",  ring: "focus:ring-rojoUnab/30" },
+    success: { bg: "bg-green-50",     text: "text-green-700", ring: "focus:ring-green-300" },
+    info:    { bg: "bg-azulUnab/10",  text: "text-azulUnab",  ring: "focus:ring-azulUnab/30" },
+  };
+  const s = estilos[tipo];
+
+  const alerta = document.createElement("div");
+  alerta.className = `flex items-center p-4 rounded-lg text-sm ${s.bg} ${s.text} max-w-sm shadow-md`;
+  alerta.setAttribute("role", "alert");
+
+  alerta.innerHTML = `
+    <svg class="w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11h2v5m-2 0h4m-2.592-8.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+    </svg>
+    <div class="ms-2">${mensaje}</div>
+    <button type="button" class="ms-auto -mx-1.5 -my-1.5 ${s.ring} rounded-lg p-1.5 inline-flex h-8 w-8 items-center justify-center hover:${s.bg} shrink-0">
+      <span class="sr-only">Cerrar</span>
+      <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+      </svg>
+    </button>
+  `;
+
+  alerta.querySelector("button").addEventListener("click", () => alerta.remove());
+
+  document.getElementById("toast-container").appendChild(alerta);
+  setTimeout(() => alerta.remove(), 5000);
+}
+
 // RENDERIZADO
 function crearTarjeta(espacio) {
   const tpl = document.getElementById("tarjeta");
@@ -258,7 +290,7 @@ formReserva.addEventListener("submit", (e) => {
 
   // Validacion bloque de horario seleccionado
   if (!hora) {
-    alert("Por favor selecciona un horario disponible.");
+    mostrarAlerta("Por favor selecciona un horario disponible.", "danger")
     return;
   }
   
@@ -282,7 +314,7 @@ formReserva.addEventListener("submit", (e) => {
   if (badgeTotalReservas) badgeTotalReservas.textContent = reservasRealizadas.length;
 
   cerrarModal();
-  alert(`¡Reserva confirmada con éxito para ${nuevaReserva.espacioTitulo}!`);
+  mostrarAlerta(`¡Reserva confirmada con éxito para ${nuevaReserva.espacioTitulo}!`, "success");
 
   // LLeva directamente a vista reservas para ver la reserva solicitada
   cambiarVista("reservas");
@@ -343,7 +375,7 @@ document.addEventListener("click", (e) => {
     if (badgeTotalReservas) badgeTotalReservas.textContent = reservasRealizadas.length;
 
     renderizarMisReservas();
-    alert("Reserva cancelada correctamente.");
+    mostrarAlerta("Reserva cancelada correctamente.", "info");
   }
 });
 
