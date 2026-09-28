@@ -1,6 +1,7 @@
 import logoUnab from "../assets/logo-unab.png";
 import iconoLogin from "../assets/icono-login.png";
 
+//este es el header
 function Header({ vista, onCambiarVista, totalReservas }) {
   return (
     <header className="text-gray-600 bg-white">

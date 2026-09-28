@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+//esta es la ventana modal para reservar un espacio, recibe el objeto espacio, la funcion onClose y la funcion onConfirmar como props
 const horariosDisponibles = ["08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00"];
 
 function ReservaModal({ espacio, onClose, onConfirmar }) {

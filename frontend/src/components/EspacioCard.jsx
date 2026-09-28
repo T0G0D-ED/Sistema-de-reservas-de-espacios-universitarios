@@ -1,3 +1,4 @@
+//esta es la tarjeta de cada ESPACIO, recibe el objeto espacio y la funcion onReservar como props
 function EspacioCard({ espacio, onReservar }) {
   return (
     <article className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:shadow-xl/40 hover:-translate-y-1 transition-all duration-300">

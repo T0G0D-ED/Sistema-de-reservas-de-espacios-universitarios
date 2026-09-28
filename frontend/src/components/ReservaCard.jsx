@@ -1,3 +1,4 @@
+//esta es la tarjeta de cada RESERVA, recibe el objeto reserva y la funcion onCancelar como props
 function ReservaCard({ reserva, onCancelar }) {
   return (
     <article className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col shadow-sm">
