@@ -12,18 +12,27 @@ Actualmente, la disponibilidad de espacios en la universidad (salas, laboratorio
 
 ## Tecnologías utilizadas
 
-* **HTML5:** Para armar la estructura de la página.
-* **CSS3:** Para darle estilo propio y ajustar detalles visuales.
-* **Tailwind:** Para darle diseño, color y forma a la página de manera rápida, poniendo clases directo en el HTML.
-* **JavaScript:** Para mejorar la página, entre esto simular datos, manejar el formulario de reservas, validar campos y actualizar la vista.
+* **React:** Para construir la interfaz y gestionar el estado de filtros, reservas y formularios.
+* **Vite:** Para el servidor de desarrollo y la compilación del frontend.
+* **Tailwind:** Para darle diseño, color y forma a la página mediante clases utilitarias.
+* **JavaScript:** Para simular datos, validar formularios y guardar reservas en `localStorage`.
 * **Git / GitHub / Git Flow / VisualStudioCode:** Para trabajar en equipo, llevar el control de versiones y juntar el código.
 
 ## Instrucciones para ejecutar el proyecto
 
-No hay necesidad de instalar nada extra.
-
 1. Descarga o clona este repositorio en tu computador.
-2. Entra a la carpeta principal del proyecto.
-3. Haz doble clic en el archivo `index.html` para abrirlo en tu navegador web.
-4. ¡Listo! Ya puedes usar el buscador y hacer una reserva.
+2. Abre Git Bash y entra al frontend:
+
+	```bash
+	cd Sistema-de-reservas-de-espacios-universitarios/frontend
+	```
+
+3. Instala las dependencias y ejecuta el servidor de desarrollo:
+
+	```bash
+	npm install
+	npm run dev
+	```
+
+4. Abre la URL que muestre Vite, normalmente `http://localhost:5173`.
 
