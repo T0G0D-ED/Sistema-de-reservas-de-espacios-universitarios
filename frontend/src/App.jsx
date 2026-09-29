@@ -5,6 +5,7 @@ import Toast from "./components/Toast";
 import EspaciosPage from "./pages/EspaciosPage";
 import ReservasPage from "./pages/ReservasPage";
 import { addReserva, getReservas, removeReserva } from "./services/reservasService";
+import { enviarCorreoConfirmacion } from "./services/resendCall";
 
 function App() {
   const [vista, setVista] = useState("espacios");
@@ -17,13 +18,24 @@ function App() {
     window.setTimeout(() => setMensaje(null), 5000);
   }
 
-  function confirmarReserva(datos) {
+  async function confirmarReserva(datos) {
     const nuevaReserva = addReserva({ ...datos, espacio: espacioSeleccionado });
     setReservas((reservasActuales) => [...reservasActuales, nuevaReserva]);
     setEspacioSeleccionado(null);
     setVista("reservas");
     notificar(`¡Reserva confirmada con éxito para ${nuevaReserva.espacioTitulo}!`);
+
+    try {
+      await enviarCorreoConfirmacion({
+        espacioTitulo: nuevaReserva.espacioTitulo,
+        fecha: nuevaReserva.fecha,
+        hora: nuevaReserva.hora,
+        correoDestino: nuevaReserva.correo,
+      });
+    } catch (error) {
+      console.error("Error al enviar el correo de confirmación:", error);
   }
+}
 
   function cancelarReserva(id) {
     const nuevasReservas = removeReserva(id);
