@@ -1,0 +1,34 @@
+{
+  "year": 2026,
+  "feriados": {
+    "enero": [{ "mes": 1, "dia": 1, "descripcion": "Año Nuevo" }],
+    "abril": [
+      { "mes": 4, "dia": 3, "descripcion": "Viernes Santo" },
+      { "mes": 4, "dia": 4, "descripcion": "Sábado Santo" }
+    ],
+    "mayo": [
+      { "mes": 5, "dia": 1, "descripcion": "Día del Trabajo" },
+      { "mes": 5, "dia": 21, "descripcion": "Día de las Glorias Navales" }
+    ],
+    "junio": [
+      { "mes": 6, "dia": 21, "descripcion": "Día Nacional de los Pueblos Indígenas" },
+      { "mes": 6, "dia": 29, "descripcion": "San Pedro y San Pablo" }
+    ],
+    "julio": [{ "mes": 7, "dia": 16, "descripcion": "Día de la Virgen del Carmen" }],
+    "agosto": [{ "mes": 8, "dia": 15, "descripcion": "Asunción de la Virgen" }],
+    "septiembre": [
+      { "mes": 9, "dia": 17, "descripcion": "Feriado Adicional Fiestas Patrias" },
+      { "mes": 9, "dia": 18, "descripcion": "Independencia Nacional" },
+      { "mes": 9, "dia": 19, "descripcion": "Día de las Glorias del Ejército" }
+    ],
+    "octubre": [
+      { "mes": 10, "dia": 11, "descripcion": "Encuentro de Dos Mundos" },
+      { "mes": 10, "dia": 31, "descripcion": "Día de las Iglesias Evangélicas y Protestantes" }
+    ],
+    "noviembre": [{ "mes": 11, "dia": 1, "descripcion": "Día de Todos los Santos" }],
+    "diciembre": [
+      { "mes": 12, "dia": 8, "descripcion": "Inmaculada Concepción" },
+      { "mes": 12, "dia": 25, "descripcion": "Navidad" }
+    ]
+  }
+}
