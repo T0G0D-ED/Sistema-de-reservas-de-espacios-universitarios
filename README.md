@@ -20,19 +20,34 @@ Actualmente, la disponibilidad de espacios en la universidad (salas, laboratorio
 
 ## Instrucciones para ejecutar el proyecto
 
-1. Descarga o clona este repositorio en tu computador.
-2. Abre Git Bash y entra al frontend:
+1. Descarga o clona este repositorio y asegúrate de tener [Node.js](https://nodejs.org/) instalado.
+2. Abre **dos terminales** en la carpeta raíz del repositorio. El frontend y el backend deben ejecutarse al mismo tiempo.
 
-	```bash
-	cd Sistema-de-reservas-de-espacios-universitarios/frontend
-	```
+### Terminal 1: frontend
 
-3. Instala las dependencias y ejecuta el servidor de desarrollo:
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-	```bash
-	npm install
-	npm run dev
-	```
+Vite mostrará la dirección local de la aplicación, normalmente `http://localhost:5173`.
 
-4. Abre la URL que muestre Vite, normalmente `http://localhost:5173`.
+### Terminal 2: backend
 
+```bash
+cd backend
+npm install
+node index.js
+```
+
+El backend quedará disponible normalmente en `http://localhost:3000`.
+
+Para enviar correos de prueba con Resend, configura estas variables en `backend/.env` antes de iniciar el backend:
+
+```env
+RESEND_API_KEY=re_tu_clave_de_resend
+RESEND_TEST_EMAIL=tu-correo-registrado-en-resend@example.com
+```
+
+`RESEND_TEST_EMAIL` debe ser el correo asociado a tu cuenta de Resend. Tanto las confirmaciones como las cancelaciones se enviarán a esa dirección, independientemente del correo ingresado al reservar. No compartas ni publiques la API key. Si cambias el archivo `.env`, reinicia el backend para que cargue la configuración nueva.

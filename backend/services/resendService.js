@@ -3,6 +3,14 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+function obtenerCorreoDestino() {
+  const correoDestino = process.env.RESEND_TEST_EMAIL?.trim();
+  if (!correoDestino) {
+    throw new Error("Falta configurar RESEND_TEST_EMAIL en backend/.env");
+  }
+  return correoDestino;
+}
+
 // Plantilla con diseño HTML para confirmación
 function htmlConfirmacion({ solicitante, espacioTitulo, fecha, hora }) {
   return `
@@ -57,10 +65,10 @@ function htmlCancelacion({ solicitante, espacioTitulo, fecha, hora }) {
   `;
 }
 
-export async function enviarCorreoConfirmacion({ correoDestino, espacioTitulo, fecha, hora, solicitante }) {
+export async function enviarCorreoConfirmacion({ espacioTitulo, fecha, hora, solicitante }) {
   const { data, error } = await resend.emails.send({
     from: "ReservaUNAB <onboarding@resend.dev>",
-    to: [correoDestino],
+    to: [obtenerCorreoDestino()],
     subject: `Confirmación de Reserva: ${espacioTitulo}`,
     html: htmlConfirmacion({ solicitante, espacioTitulo, fecha, hora }),
   });
@@ -69,10 +77,10 @@ export async function enviarCorreoConfirmacion({ correoDestino, espacioTitulo, f
   return data;
 }
 
-export async function enviarCorreoCancelacion({ correoDestino, espacioTitulo, fecha, hora, solicitante }) {
+export async function enviarCorreoCancelacion({ espacioTitulo, fecha, hora, solicitante }) {
   const { data, error } = await resend.emails.send({
     from: "ReservaUNAB <onboarding@resend.dev>",
-    to: [correoDestino],
+    to: [obtenerCorreoDestino()],
     subject: `Cancelación de Reserva: ${espacioTitulo}`,
     html: htmlCancelacion({ solicitante, espacioTitulo, fecha, hora }),
   });
