@@ -12,7 +12,7 @@
   "type": "module",
   "dependencies": {
     "cors": "^2.8.6",
-    "dotenv": "^18.0.4",
+    "dotenv": "^18.0.5",
     "express": "^5.2.1",
     "resend": "^6.30.0"
   }

@@ -5,6 +5,7 @@ import Toast from "./components/Toast";
 import EspaciosPage from "./pages/EspaciosPage";
 import ReservasPage from "./pages/ReservasPage";
 import { addReserva, getReservas, removeReserva } from "./services/reservasService";
+import { enviarCorreoConfirmacion, enviarCorreoCancelacion } from "./services/resendCall";  
 
 function App() {
   const [vista, setVista] = useState("espacios");
@@ -17,19 +18,52 @@ function App() {
     window.setTimeout(() => setMensaje(null), 5000);
   }
 
-  function confirmarReserva(datos) {
+  async function confirmarReserva(datos) {
     const nuevaReserva = addReserva({ ...datos, espacio: espacioSeleccionado });
     setReservas((reservasActuales) => [...reservasActuales, nuevaReserva]);
     setEspacioSeleccionado(null);
     setVista("reservas");
     notificar(`¡Reserva confirmada con éxito para ${nuevaReserva.espacioTitulo}!`);
+
+    try {
+      await enviarCorreoConfirmacion({
+        espacioTitulo: nuevaReserva.espacioTitulo,
+        fecha: nuevaReserva.fecha,
+        hora: nuevaReserva.hora,
+        correoDestino: nuevaReserva.correo,
+        solicitante: nuevaReserva.nombre,
+        motivo: nuevaReserva.motivo
+      });
+      notificar("Correo de confirmación enviado exitosamente.", "info");
+    } catch (error){
+      console.error("Error al enviar el correo de confirmación: ", error);
+      notificar("Reserva guardada, pero no se pudo enviar el correo.", "warning");
+    }
   }
 
-  function cancelarReserva(id) {
+  async function cancelarReserva(id) {
+    const reservaACancelar = reservas.find((r) => r.id === id);
     const nuevasReservas = removeReserva(id);
     setReservas(nuevasReservas);
-    notificar("Reserva cancelada correctamente.", "info");
+    notificar("Reserva cancelada exitosamente.", "info");
+
+    if(reservaACancelar){
+      try{await enviarCorreoCancelacion({
+        espacioTitulo: reservaACancelar.espacioTitulo,
+        fecha: reservaACancelar.fecha,
+        hora: reservaACancelar.hora,
+        correoDestino: reservaACancelar.correo,
+        solicitante: reservaACancelar.nombre,
+        motivo: reservaACancelar.motivo
+      });
+      notificar("Reserva cancelada exitosamente.", "info");
+    } catch (error) {
+      console.error("Error al enviar correo de cancelación:", error);
+      notificar("Reserva cancelada, pero falló el envío de correo.", "warning");
+    }
+
   }
+}
 
   return (
     <div className="min-h-screen bg-gray-50 font-['Poppins'] text-gray-900">
