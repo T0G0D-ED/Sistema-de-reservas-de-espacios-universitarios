@@ -1,12 +1,17 @@
 import express from "express";
-import cors from "cors";
-import "dotenv/config";
+import cors from "cors";  // Permite que el frontend hable con este backend
+import "dotenv/config"; // Carga las variables del .env PORT, DATABASE_URL, JWT_SECRET
 import { enviarCorreoConfirmacion, enviarCorreoCancelacion } from "./services/resendService.js";
-// Nuevo: importar las rutas de espacios 
 import espaciosRoutes from "./routes/espacios.routes.js";
+// 1. IMPORTAR EL ENRUTADOR: Traee el archivo auth.routes.js 
+import authRoutes from "./routes/auth.routes.js"; 
 
 const app = express();
+
+// Middlewares globales:
+// cors() permite que el frontend pueda hacer peticiones a este servidor.
 app.use(cors());
+// express.json() lee el cuerpo JSON de las peticiones POST (como email y password) y lo guarda en req.body.
 app.use(express.json());
 
 // Rutas existentes Resend
@@ -29,11 +34,16 @@ app.post("/api/enviar-correo", async (req, res) => {
 });
 
 // Rutas nuevas PostgreSQL
-// Se le dice a express que cualquier peticion que empiece con /api/espacios
-// se maneje con el archivo de rutas de espacios
+// 2. MONTAR EL PREFIJO DE RUTA 
+// Se le dice a Express que todo lo que empiece con /api/auth, envialo a authRoutes
+// Como dentro de authRoutes se define /login y /registro, express los une automaticamente
+// formando las URLs completas /api/auth/login y /api/auth/registro.
+app.use("/api/auth", authRoutes);
+
+// Las peticiones a /api/espacios las maneja espaciosRoutes
 app.use("/api/espacios", espaciosRoutes);
 
-// ruta de salud como endpoint para verificar desde el navegador si el backend esta respondiendo
+// Ruta de salud como endpoint para verificar desde el navegador si el backend esta respondiendo
 app.get("/api/health", async (req, res) => {
   res.json({ 
     status: "ok", 
