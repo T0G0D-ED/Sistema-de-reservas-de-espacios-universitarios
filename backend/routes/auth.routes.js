@@ -14,7 +14,7 @@ const router = Router();
 router.post('/registro', async (req, res) => {
 // 1. Extraer los datos que el cliente envio en el cuerpo JSON de la peticion 
   try {
-    const { nombre, email, password, rol } = req.body;
+    const { nombre, email, password } = req.body;
     
     // 2. Validacion basica que campos no esten vacios antes de tocar la base de datos 
     // Si faltan datos obligatorios se corta aqui y devuelve error 400
@@ -24,7 +24,7 @@ router.post('/registro', async (req, res) => {
 
 		//3. Llamar al servicio auth para hacer las tareas pesadas 
 		// await para que se espere a que la operacion de BD termine 
-    const usuario = await authService.registrar(nombre, email, password, rol);
+    const usuario = await authService.registrar(nombre, email, password);
     // 4. Responder con codigo 201 creado y los datos publicos del usuario creado  
     res.status(201).json(usuario);
     
@@ -42,16 +42,17 @@ router.post('/registro', async (req, res) => {
 // Endpoint: POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-	  // 1. Extraer correo y contraseña del JSON enviado por el usuario 
-    const { email, password } = req.body;
+	  // 1. Extraer identificador y contraseña del JSON enviado por el usuario
+    const { identificador, email, password } = req.body;
+    const login = identificador || email;
 		
 		// 2. Verificar que campos vengan presentes 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email y password son obligatorios.' });
+    if (!login || !password) {
+      return res.status(400).json({ error: 'Usuario/correo y contraseña son obligatorios.' });
     }
 
 		// 3. Se delega la verificacion y creacion del jwt al auth service
-    const data = await authService.login(email, password);
+    const data = await authService.login(login, password);
     
     // 4. Se responde con codigo de exito 200 entregando el token, usuario
     res.json(data);

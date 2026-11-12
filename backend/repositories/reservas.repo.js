@@ -35,16 +35,36 @@ export const reservasRepo = {
   async listarPorUsuario(usuarioId) {
     const query = `
       SELECT 
-        r.id, r.fecha_inicio, r.fecha_fin, r.estado, r.motivo, r.created_at,
+        r.id, r.usuario_id, r.fecha_inicio, r.fecha_fin, r.estado, r.motivo, r.motivo_rechazo, r.created_at,
+        u.nombre AS usuario_nombre, u.email AS usuario_email,
         e.nombre AS espacio_nombre, e.tipo AS espacio_tipo,
         ed.nombre AS edificio_nombre
       FROM reservas r
+      JOIN usuarios u ON u.id = r.usuario_id
       JOIN espacios e ON e.id = r.espacio_id
       JOIN edificios ed ON ed.id = e.edificio_id
       WHERE r.usuario_id = $1
       ORDER BY r.fecha_inicio DESC
     `;
     const { rows } = await pool.query(query, [usuarioId]);
+    return rows;
+  },
+
+  async listarTodas() {
+    const query = `
+      SELECT
+        r.id, r.usuario_id, r.fecha_inicio, r.fecha_fin, r.estado, r.motivo,
+        r.motivo_rechazo, r.created_at,
+        u.nombre AS usuario_nombre, u.email AS usuario_email,
+        e.nombre AS espacio_nombre, e.tipo AS espacio_tipo,
+        ed.nombre AS edificio_nombre
+      FROM reservas r
+      JOIN usuarios u ON u.id = r.usuario_id
+      JOIN espacios e ON e.id = r.espacio_id
+      JOIN edificios ed ON ed.id = e.edificio_id
+      ORDER BY r.fecha_inicio DESC
+    `;
+    const { rows } = await pool.query(query);
     return rows;
   },
 

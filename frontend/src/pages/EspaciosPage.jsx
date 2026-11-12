@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import EspacioCard from "../components/EspacioCard";
 import lupa from "../assets/lupa.png";
-import { api } from "../services/api"; // ← Nuevo: importamos nuestro servicio
 
 function coincideCapacidad(capacidad, filtro) {
   if (!filtro) return true;
@@ -10,37 +9,21 @@ function coincideCapacidad(capacidad, filtro) {
   return capacidad > 40;
 }
 
-function EspaciosPage({ onReservar }) {
+function EspaciosPage({ espacios, cargando, error, onReintentar, onReservar }) {
   const [busqueda, setBusqueda] = useState("");
   const [edificio, setEdificio] = useState("");
   const [tipo, setTipo] = useState("");
   const [capacidad, setCapacidad] = useState("");
-  
-  // ← Nuevos estados para cumplir rubrica (carga, error, vacío)
-  const [espacios, setEspacios] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  // ← Nuevo: Cargar datos desde API al montar el componente
-  useEffect(() => {
-    const cargarEspacios = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await api.get('/api/espacios');
-        setEspacios(data);
-      } catch (err) {
-        console.error("Error al cargar espacios:", err);
-        setError("No se pudieron cargar los espacios. Intenta más tarde.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const edificios = [...new Set(espacios.map((espacio) => espacio.edificio_nombre).filter(Boolean))].sort();
+  const tipos = [...new Set(espacios.map((espacio) => espacio.tipo).filter(Boolean))].sort();
+  const etiquetasTipo = {
+    SALA: "Sala de clases",
+    LABORATORIO: "Laboratorio",
+    SALA_ESTUDIO: "Sala de estudio",
+    AUDITORIO: "Auditorio",
+  };
 
-    cargarEspacios();
-  }, []);
-
-  // ← logica de filtros se mantiene igual (solo cambia la fuente de datos)
   const filtrados = espacios.filter((espacio) => {
     const texto = busqueda.toLowerCase().trim();
     const coincideTexto = 
@@ -49,14 +32,13 @@ function EspaciosPage({ onReservar }) {
       espacio.edificio_nombre?.toLowerCase().includes(texto);
     
     const coincideEdificio = !edificio || espacio.edificio_nombre === edificio;
-    const coincideTipo = !tipo || espacio.tipo?.toLowerCase() === tipo.toLowerCase();
+    const coincideTipo = !tipo || espacio.tipo === tipo;
     const coincideCap = coincideCapacidad(espacio.capacidad, capacidad);
     
     return coincideTexto && coincideEdificio && coincideTipo && coincideCap;
   });
 
-  // ← 1. Estado de CARGA (requerido por rubrica 4.1)
-  if (loading) {
+  if (cargando) {
     return (
       <section className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -67,14 +49,13 @@ function EspaciosPage({ onReservar }) {
     );
   }
 
-  // ← 2. Estado de ERROR (requerido por rubrica 4.1)
   if (error) {
     return (
       <section className="flex items-center justify-center min-h-[400px]">
         <div className="text-center bg-red-50 border border-red-200 rounded-xl p-8 max-w-md">
           <p className="text-red-600 font-medium mb-2">⚠️ {error}</p>
           <button 
-            onClick={() => window.location.reload()} 
+            onClick={onReintentar}
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
           >
             Reintentar
@@ -84,7 +65,6 @@ function EspaciosPage({ onReservar }) {
     );
   }
 
-  // ← 3. Estado de EXITO (interfaz normal)
   return (
     <section>
       <div className="mb-6">
@@ -113,7 +93,7 @@ function EspaciosPage({ onReservar }) {
             className="px-7 py-2 rounded-lg border border-gray-200 text-sm bg-white"
           >
             <option value="">Todos los edificios</option>
-            {["Edificio A", "Edificio B", "Edificio C", "Edificio D", "Edificio E", "Biblioteca"].map((opcion) => (
+            {edificios.map((opcion) => (
               <option key={opcion}>{opcion}</option>
             ))}
           </select>
@@ -124,8 +104,8 @@ function EspaciosPage({ onReservar }) {
             className="px-7 py-2 rounded-lg border border-gray-200 text-sm bg-white"
           >
             <option value="">Tipo de sala: Todas</option>
-            {["Sala de clases", "Laboratorio", "Sala de estudio", "Sala de reunion"].map((opcion) => (
-              <option key={opcion}>{opcion}</option>
+            {tipos.map((opcion) => (
+              <option key={opcion} value={opcion}>{etiquetasTipo[opcion] || opcion}</option>
             ))}
           </select>
 
@@ -143,7 +123,6 @@ function EspaciosPage({ onReservar }) {
 
         {/* Contador */}
         <p className="text-sm text-black mb-4 mt-4">
-          {/* ← 4. Estado de VACÍO (requerido por rúbrica 4.1) */}
           {filtrados.length === 0 
             ? "No se encontraron espacios con esos filtros." 
             : `${filtrados.length} de ${espacios.length} espacios disponibles`

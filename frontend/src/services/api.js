@@ -1,22 +1,40 @@
 
-// Lee la variable de tu .env (Vite requiere el prefijo VITE_)
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { getAuthToken } from "./authSession";
 
-// Funcion generica para hacer peticiones (se puede usar fetch o axios)
-export const api = {
-  get: async (endpoint) => {
-    const response = await fetch(`${API_URL}${endpoint}`);
-    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-    return response.json();
-  },
-  
-  post: async (endpoint, data) => {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-    return response.json();
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+async function request(endpoint, options = {}) {
+  const headers = { ...options.headers };
+  const token = getAuthToken();
+
+  if (options.body !== undefined) headers["Content-Type"] = "application/json";
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || `Error HTTP: ${response.status}`);
   }
+
+  return data;
+}
+
+export const api = {
+  get: (endpoint) => request(endpoint),
+  post: (endpoint, data) => request(endpoint, {
+    method: "POST",
+    body: JSON.stringify(data),
+  }),
+  put: (endpoint, data) => request(endpoint, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  }),
+  patch: (endpoint, data) => request(endpoint, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  }),
 };

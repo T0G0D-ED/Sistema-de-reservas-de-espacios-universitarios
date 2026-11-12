@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
       SELECT e.*, b.nombre AS edificio_nombre, b.codigo AS edificio_codigo
       FROM espacios e
       JOIN edificios b ON b.id = e.edificio_id
-      WHERE e.disponible = true
+      WHERE e.disponible = true AND b.activo = true
       ORDER BY e.nombre
     `;
     const { rows } = await pool.query(query);

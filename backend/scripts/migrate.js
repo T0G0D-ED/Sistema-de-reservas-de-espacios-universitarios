@@ -8,13 +8,18 @@ const __dirname = path.dirname(__filename);
 
 async function migrate() {
   console.log('Ejecutando migraciones...');
-  
-  const sqlFile = path.join(__dirname, '..', 'migrations', '001_init.sql');
-  const sql = await fs.readFile(sqlFile, 'utf-8');
-  
+
   try {
-    await pool.query(sql);
-    console.log(' Migración aplicada correctamente');
+    const migrationsDirectory = path.join(__dirname, '..', 'migrations');
+    const files = (await fs.readdir(migrationsDirectory))
+      .filter((file) => file.endsWith('.sql'))
+      .sort();
+
+    for (const file of files) {
+      const sql = await fs.readFile(path.join(migrationsDirectory, file), 'utf-8');
+      await pool.query(sql);
+      console.log(`Migración aplicada: ${file}`);
+    }
   } catch (err) {
     console.error('Error en migración:', err.message);
     process.exitCode = 1;

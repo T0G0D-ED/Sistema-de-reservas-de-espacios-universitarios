@@ -4,6 +4,9 @@ import "dotenv/config"; // Carga las variables del .env PORT, DATABASE_URL, JWT_
 import { connectMongo } from './services/mongoService.js';
 import { enviarCorreoConfirmacion, enviarCorreoCancelacion } from "./services/resendService.js";
 import espaciosRoutes from "./routes/espacios.routes.js";
+import edificiosRoutes from "./routes/edificios.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
+import administracionRoutes from "./routes/administracion.routes.js";
 // Importar enrutador
 import authRoutes from "./routes/auth.routes.js"; 
 // Importar rutas de reservas
@@ -49,9 +52,14 @@ app.use("/api/auth", authRoutes);
 // Las peticiones a /api/espacios las maneja espaciosRoutes
 app.use("/api/espacios", espaciosRoutes);
 
+// Edificios disponibles para las vistas del frontend.
+app.use("/api/edificios", edificiosRoutes);
+
 // Las peticiones a /api/reservas las maneja reservasRoutes
 // Todas las rutas dentro de este archivo están protegidas por authMiddleware
 app.use("/api/reservas", reservasRoutes); 
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/administracion", administracionRoutes);
 
 // Ruta de salud como endpoint para verificar desde el navegador si el backend esta respondiendo
 app.get("/api/health", async (req, res) => {

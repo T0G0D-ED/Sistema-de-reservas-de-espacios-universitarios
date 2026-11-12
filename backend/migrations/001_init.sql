@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
+    username VARCHAR(50),
     password_hash VARCHAR(255) NOT NULL,
     rol rol_usuario NOT NULL DEFAULT 'ESTUDIANTE',
     activo BOOLEAN NOT NULL DEFAULT TRUE,

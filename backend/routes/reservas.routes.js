@@ -54,12 +54,13 @@ router.post('/', async (req, res) => {
 // GET /api/reservas - Listar mis reservas
 router.get('/', async (req, res) => {
   try {
-    const usuarioId = req.usuario.id;
-    // Llamar al service para obtener las reservas de ese usuario
-    const reservas = await reservasService.obtenerMisReservas(usuarioId);
-    // Responder con un array de reservas
+    const { id: usuarioId, rol } = req.usuario;
+    const reservas = rol === 'ADMIN' || rol === 'DOCENTE'
+      ? await reservasService.obtenerTodas()
+      : await reservasService.obtenerMisReservas(usuarioId);
     res.json(reservas);
   } catch (error) {
+    console.error('Error al obtener reservas:', error);
     res.status(500).json({ error: 'Error al obtener reservas' });
   }
 });
@@ -104,13 +105,12 @@ router.patch('/:id/estado', async (req, res) => {
 router.get('/:id/historial', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Llamar al servicio para obtener la linea de tiempo de esta reserva especifica
-    const historial = await reservasService.obtenerHistorialReserva(Number(id));
+    const { id: usuarioId, rol } = req.usuario;
+    const historial = await reservasService.obtenerHistorialReserva(Number(id), usuarioId, rol);
     
     res.json(historial);
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener el historial de auditoría' });
+    res.status(error.status || 500).json({ error: error.message || 'Error al obtener el historial de auditoría' });
   }
 });
 

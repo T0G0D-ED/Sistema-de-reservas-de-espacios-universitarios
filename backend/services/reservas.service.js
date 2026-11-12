@@ -52,6 +52,10 @@ export const reservasService = {
     return await reservasRepo.listarPorUsuario(usuarioId);
   },
 
+  async obtenerTodas() {
+    return await reservasRepo.listarTodas();
+  },
+
   // Función 3: Cambiar estado de la reserva (Actualiza en PostgreSQL + Audita en MongoDB)
   async cambiarEstado(usuarioId, usuarioEmail, usuarioRol, reservaId, nuevoEstado, motivoRechazo = null) {
     // 1. Verificar que la reserva exista en PostgreSQL
@@ -67,6 +71,9 @@ export const reservasService = {
       }
       if (reserva.estado !== 'PENDIENTE') {
         throw { status: 400, message: 'Solo se pueden aprobar/rechazar reservas pendientes.' };
+      }
+      if (nuevoEstado === 'RECHAZADA' && !motivoRechazo?.trim()) {
+        throw { status: 400, message: 'Debes indicar un motivo para rechazar la reserva.' };
       }
     }
 
@@ -108,7 +115,17 @@ export const reservasService = {
   },
 
   // Función 4: Consultar la linea de tiempo de una reserva desde MongoDB
-  async obtenerHistorialReserva(reservaId) {
+  async obtenerHistorialReserva(reservaId, usuarioId, usuarioRol) {
+    const reserva = await reservasRepo.obtenerPorId(reservaId);
+    if (!reserva) {
+      throw { status: 404, message: 'Reserva no encontrada.' };
+    }
+
+    const puedeConsultarTodas = usuarioRol === 'ADMIN' || usuarioRol === 'DOCENTE';
+    if (reserva.usuario_id !== usuarioId && !puedeConsultarTodas) {
+      throw { status: 403, message: 'No tienes permiso para consultar este historial.' };
+    }
+
     // Busca todos los eventos de esa reserva y los ordena del mas antiguo al más reciente (1 = ascendente)
     const eventos = await EventoReserva.find({ reservaId: Number(reservaId) }).sort({ fecha: 1 });
     return eventos;

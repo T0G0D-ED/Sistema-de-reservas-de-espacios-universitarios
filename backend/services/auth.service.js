@@ -8,7 +8,7 @@ import pool from './dbService.js';
 //Crear usuario nuevo 
 export const authService = {
 	// Funcion para registrar usuario nuevo en la BD
-  async registrar(nombre, email, password, rol = 'ESTUDIANTE') {
+  async registrar(nombre, email, password) {
     // 1. Verificar si el usuario ya existe para evitar duplicados
     // $1 como parametro para evitar inyecciones sql
     const { rows } = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email]);
@@ -25,19 +25,23 @@ export const authService = {
     // Returning devuelve los datos recien creados, deja fuera el password_hash
     const query = `
       INSERT INTO usuarios (nombre, email, password_hash, rol)
-      VALUES ($1, $2, $3, $4)
+      VALUES ($1, $2, $3, 'ESTUDIANTE')
       RETURNING id, nombre, email, rol
     `;
-    const { rows: nuevoUsuario } = await pool.query(query, [nombre, email, passwordHash, rol]);
+    const { rows: nuevoUsuario } = await pool.query(query, [nombre, email, passwordHash]);
     return nuevoUsuario[0];
   },
 
 	//Funcion para validar credenciales y entregar el pase de acceso token
-  async login(email, password) {
-    // 1. Buscar usuario por email y traer su contraseña encriptada
+  async login(identificador, password) {
+    // 1. Buscar usuario por correo o nombre de usuario.
     const { rows } = await pool.query(
-      'SELECT id, nombre, email, rol, password_hash FROM usuarios WHERE email = $1', 
-      [email]
+      `SELECT id, nombre, email, rol, password_hash
+       FROM usuarios
+       WHERE activo = TRUE AND (email = $1 OR username = $1)
+       ORDER BY CASE WHEN username = $1 THEN 0 ELSE 1 END
+       LIMIT 1`,
+      [identificador]
     );
     
     // Si correo no existe devuelve error

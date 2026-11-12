@@ -22,6 +22,17 @@ Actualmente, la disponibilidad de espacios en la universidad (salas, laboratorio
 * **Resend:** Para enviar correos de confirmación y cancelación.
 * **Git / GitHub / Git Flow / VisualStudioCode:** Para trabajar en equipo, llevar el control de versiones y juntar el código.
 
+## Arquitectura del frontend
+
+El código de `frontend/src` se organiza por responsabilidad:
+
+* `pages/`: composición de páginas y presentación de datos.
+* `components/`: elementos de interfaz reutilizables.
+* `hooks/`: estado y flujos de autenticación, espacios y reservas.
+* `services/`: cliente HTTP y acceso a los endpoints de cada recurso.
+
+Las vistas de salas, edificios, administración, solicitudes, historial y utilización consumen la API propia. El dashboard muestra reservas activas y horas reservadas de los últimos 30 días; su acceso está limitado a docentes y administradores.
+
 ## Instrucciones para ejecutar el proyecto
 
 Se necesita [Docker Desktop](https://www.docker.com/products/docker-desktop/) con Docker Compose. El Compose de desarrollo levanta el frontend, el backend, PostgreSQL y MongoDB. El código de frontend y backend se monta como volumen para permitir la recarga durante el desarrollo.
@@ -89,6 +100,14 @@ Para cargar datos y usuarios de prueba (opcional):
 ```powershell
 docker compose --env-file backend/.env exec backend npm run seed
 ```
+
+El seed incluye nueve espacios de ejemplo y evita duplicarlos al ejecutarse nuevamente.
+
+El seed también crea la cuenta de administración de desarrollo `admin` / `admin`. Inicia sesión usando el nombre de usuario. Esta contraseña pública es solo para desarrollo local: no expongas esa cuenta en un despliegue real. El registro público siempre crea cuentas de estudiante y no permite elegir roles.
+
+La cuenta ADMIN puede crear, editar y desactivar edificios, salas y laboratorios desde **Administración**, además de gestionar las solicitudes de reserva. Las bajas son lógicas para conservar las reservas históricas.
+
+Las reservas requieren una cuenta: puedes iniciar sesión o registrarte desde el frontend. Los espacios y las reservas se leen y guardan en PostgreSQL.
 
 ### 4. Acceder y detener los servicios
 

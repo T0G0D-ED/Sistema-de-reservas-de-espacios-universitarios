@@ -11,11 +11,22 @@ const iconosPorTipo = {
   "AUDITORIO": meetingIcon,
 };
 
+const fondosPorEspacio = [
+  "linear-gradient(135deg, #2563eb, #1e3a8a)",
+  "linear-gradient(135deg, #0f766e, #134e4a)",
+  "linear-gradient(135deg, #7e22ce, #4c1d95)",
+  "linear-gradient(135deg, #c2410c, #7c2d12)",
+  "linear-gradient(135deg, #be123c, #881337)",
+  "linear-gradient(135deg, #0369a1, #0c4a6e)",
+  "linear-gradient(135deg, #4d7c0f, #365314)",
+  "linear-gradient(135deg, #4338ca, #312e81)",
+];
+
 function EspacioCard({ espacio, onReservar }) {
-  // Fallback de color si no hay imagen (cover) en la base de datos
+  const indiceFondo = Number(espacio.id) % fondosPorEspacio.length;
   const bgStyle = espacio.cover 
     ? { background: espacio.cover } 
-    : { background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' };
+    : { background: fondosPorEspacio[indiceFondo] };
 
   return (
     <article className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:shadow-xl/40 hover:-translate-y-1 transition-all duration-300">
