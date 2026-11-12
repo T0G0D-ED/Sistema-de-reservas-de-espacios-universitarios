@@ -3,8 +3,10 @@ import cors from "cors";  // Permite que el frontend hable con este backend
 import "dotenv/config"; // Carga las variables del .env PORT, DATABASE_URL, JWT_SECRET
 import { enviarCorreoConfirmacion, enviarCorreoCancelacion } from "./services/resendService.js";
 import espaciosRoutes from "./routes/espacios.routes.js";
-// 1. IMPORTAR EL ENRUTADOR: Traee el archivo auth.routes.js 
+// Importar enrutador
 import authRoutes from "./routes/auth.routes.js"; 
+// Importar rutas de reservas
+import reservasRoutes from "./routes/reservas.routes.js";
 
 const app = express();
 
@@ -43,6 +45,10 @@ app.use("/api/auth", authRoutes);
 // Las peticiones a /api/espacios las maneja espaciosRoutes
 app.use("/api/espacios", espaciosRoutes);
 
+// Las peticiones a /api/reservas las maneja reservasRoutes
+// Todas las rutas dentro de este archivo están protegidas por authMiddleware
+app.use("/api/reservas", reservasRoutes); 
+
 // Ruta de salud como endpoint para verificar desde el navegador si el backend esta respondiendo
 app.get("/api/health", async (req, res) => {
   res.json({ 
@@ -53,4 +59,7 @@ app.get("/api/health", async (req, res) => {
 
 // Encendido del Servidor
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`API en http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`API corriendo en http://localhost:${PORT}`);
+  console.log(`Documentación Swagger (pendiente): http://localhost:${PORT}/api-docs`);
+});
