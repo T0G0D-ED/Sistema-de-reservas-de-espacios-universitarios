@@ -1,74 +1,116 @@
-// Importar repository ayudante 
+// Importamos el repositorio SQL (PostgreSQL) y el modelo NoSQL (MongoDB)
 import { reservasRepo } from '../repositories/reservas.repo.js';
+import { EventoReserva } from '../models/EventoReserva.js';
 
 export const reservasService = {
 
-	// Funcion 1: Solicitar nueva reserva 
-  async crearReserva(usuarioId, espacioId, fechaInicio, fechaFin, motivo) {
+  // Funcion 1: Solicitar nueva reserva (Escribe en PostgreSQL + Audita en MongoDB)
+  async crearReserva(usuarioId, usuarioEmail, espacioId, fechaInicio, fechaFin, motivo, espacioNombre = null) {
     
-    // 1. Validacion basica de fechas 
-    // Se convierte texto iso a objetos date para comparar
+    // 1. Validacion básica de fechas
     if (new Date(fechaFin) <= new Date(fechaInicio)) {
       throw { status: 400, message: 'La fecha de fin debe ser posterior a la de inicio.' };
     }
 
-		// 2. Validacion de conflicto de horario 
+    // 2. Validacion de conflicto de horario en PostgreSQL
     // Se pregunta al repositorio si si hay algo reservado en el rango de tiempo
     const conflicto = await reservasRepo.buscarConflicto(espacioId, fechaInicio, fechaFin);
     if (conflicto) {
-	    // Si hay choque se lanza error 409 con el motivo 
       throw { 
         status: 409, 
         message: `Conflicto de horario: El espacio ya está reservado (Estado: ${conflicto.estado}).` 
       };
     }
 
-    // 3. Si esta despejado el horario, se delega al repo la creacion en PENDIENTE
-    return await reservasRepo.crear(usuarioId, espacioId, fechaInicio, fechaFin, motivo);
+    // 3. Crear el registro transaccional en PostgreSQL (estado inicial: PENDIENTE)
+    const nuevaReserva = await reservasRepo.crear(usuarioId, espacioId, fechaInicio, fechaFin, motivo);
+
+    // 4. Registrar el evento inicial en MongoDB Atlas (Auditoria inmutable)
+    try {
+      await EventoReserva.create({
+        reservaId: nuevaReserva.id, // Vinculamos con el ID recien generado por PostgreSQL
+        tipoEvento: 'CREADA',
+        actorId: usuarioId,
+        actorEmail: usuarioEmail,
+        metadata: {
+          espacioId: espacioId,
+          espacioNombre: espacioNombre,
+          fechaInicio: fechaInicio,
+          fechaFin: fechaFin,
+          motivo: motivo
+        }
+      });
+    } catch (mongoError) {
+      console.error('Reserva creada en SQL, pero falló el log en MongoDB:', mongoError.message);
+    }
+
+    return nuevaReserva;
   },
 
-	// Funcion 2: Consultar el historial personal de reservas
+  // Función 2: Consultar el historial personal de reservas (Lectura desde PostgreSQL)
   async obtenerMisReservas(usuarioId) {
     return await reservasRepo.listarPorUsuario(usuarioId);
   },
 
-	// Funcion 3: Cambiar estado de la reserva (Aprobar, Rechazar o Cancelar)
-  async cambiarEstado(usuarioId, usuarioRol, reservaId, nuevoEstado, motivoRechazo = null) {
-    // 1. Verificar que la reserva exista en PGSQL
+  // Función 3: Cambiar estado de la reserva (Actualiza en PostgreSQL + Audita en MongoDB)
+  async cambiarEstado(usuarioId, usuarioEmail, usuarioRol, reservaId, nuevoEstado, motivoRechazo = null) {
+    // 1. Verificar que la reserva exista en PostgreSQL
     const reserva = await reservasRepo.obtenerPorId(reservaId);
     if (!reserva) {
       throw { status: 404, message: 'Reserva no encontrada.' };
     }
 
-    // 2. Reglas para aprobar o rechazar 
+    // 2. Reglas de negocio para aprobar o rechazar
     if (nuevoEstado === 'APROBADA' || nuevoEstado === 'RECHAZADA') {
-	    // Solo personal autorizado admin o docente pueden aparobar o rechazar solicitudes
       if (usuarioRol !== 'ADMIN' && usuarioRol !== 'DOCENTE') {
         throw { status: 403, message: 'No tienes permisos para aprobar o rechazar reservas.' };
       }
-      // Solo se cambia el estado si esta en estado PENDIENTE
       if (reserva.estado !== 'PENDIENTE') {
         throw { status: 400, message: 'Solo se pueden aprobar/rechazar reservas pendientes.' };
       }
     }
 
-		// 3. Reglas para cancelar 
+    // 3. Reglas de negocio para cancelar
     if (nuevoEstado === 'CANCELADA') {
-      // El dueño de la reserva o un admin pueden cancelar
+  	  // Solo el dueño de la reserva o un admin pueden cancelar
       if (reserva.usuario_id !== usuarioId && usuarioRol !== 'ADMIN') {
         throw { status: 403, message: 'No tienes permiso para cancelar esta reserva.' };
       }
-      // Se evita volver a cancelar una reserva que estaba ya inactiva
+      // Solo se cambia el estado si esta en estado PENDIENTE
       if (reserva.estado === 'CANCELADA' || reserva.estado === 'RECHAZADA') {
         throw { status: 400, message: 'Esta reserva ya fue cancelada o rechazada.' };
       }
     }
-		
-		// 4. Auditoria para guardar el id del responsable que tomo la decision de aprobar o rechazar
-		// Si la accion la tomo un usuario da null 
+
+    // 4. Determinar quien aprobo/rechazo para la columna SQL
     const aprobadaPor = (nuevoEstado === 'APROBADA' || nuevoEstado === 'RECHAZADA') ? usuarioId : null;
-	  
-	  // 5. Ejecutar actualizacion en la base de datos
-    return await reservasRepo.actualizarEstado(reservaId, nuevoEstado, motivoRechazo, aprobadaPor);
+    
+    // 5. Ejecutar actualizacion del estado actual en PostgreSQL
+    const reservaActualizada = await reservasRepo.actualizarEstado(reservaId, nuevoEstado, motivoRechazo, aprobadaPor);
+
+    // 6. Registrar el cambio de estado en MongoDB Atlas
+    try {
+      await EventoReserva.create({
+        reservaId: Number(reservaId),
+        tipoEvento: nuevoEstado, // 'APROBADA', 'RECHAZADA' o 'CANCELADA'
+        actorId: usuarioId,
+        actorEmail: usuarioEmail,
+        metadata: {
+          estadoAnterior: reserva.estado,
+          motivoRechazo: motivoRechazo || null
+        }
+      });
+    } catch (mongoError) {
+      console.error('Estado actualizado en SQL, pero falló el log en MongoDB:', mongoError.message);
+    }
+
+    return reservaActualizada;
+  },
+
+  // Función 4: Consultar la linea de tiempo de una reserva desde MongoDB
+  async obtenerHistorialReserva(reservaId) {
+    // Busca todos los eventos de esa reserva y los ordena del mas antiguo al más reciente (1 = ascendente)
+    const eventos = await EventoReserva.find({ reservaId: Number(reservaId) }).sort({ fecha: 1 });
+    return eventos;
   }
 };

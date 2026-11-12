@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";  // Permite que el frontend hable con este backend
 import "dotenv/config"; // Carga las variables del .env PORT, DATABASE_URL, JWT_SECRET
+import { connectMongo } from './services/mongoService.js';
 import { enviarCorreoConfirmacion, enviarCorreoCancelacion } from "./services/resendService.js";
 import espaciosRoutes from "./routes/espacios.routes.js";
 // Importar enrutador
@@ -15,6 +16,9 @@ const app = express();
 app.use(cors());
 // express.json() lee el cuerpo JSON de las peticiones POST (como email y password) y lo guarda en req.body.
 app.use(express.json());
+
+// Conectar a MongoDB al iniciar
+connectMongo(); // LLAMAR FUNCION
 
 // Rutas existentes Resend
 app.post("/api/enviar-correo", async (req, res) => {

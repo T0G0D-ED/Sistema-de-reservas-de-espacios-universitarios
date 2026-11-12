@@ -1,28 +1,32 @@
 // Importar pool que es el puente de conexion configurado para comunicar con Postgres
-import  pool  from  '../services/dbService.js';
+import pool from '../services/dbService.js';
 // Importar bcrypt para poder encriptar claves
 import bcrypt from 'bcrypt';
 
-//Funcion async para para la conexion a la base de datos que toma tiempo
-//Node.js espera que cada consulta termine antes de seguir con la otra
+// Funcion async para la conexion a la base de datos que toma tiempo
+// Node.js espera que cada consulta termine antes de seguir con la otra
 async function seed() {
   console.log('Insertando datos de prueba...');
 
   try {
-    // 1. Usuario administrador 
-    //No guardar claves en texto plano. 
-    //bcrypt.hash toma admin123 y se mezcla 10 veces
-    //genera cadena de texto secreta 
-    const hash = await bcrypt.hash('admin123', 10);
+    // 1. Usuarios (Admin, Estudiante y Docente)
+    // Generamos los hashes para las contraseñas de prueba
+    const hashAdmin = await bcrypt.hash('admin123', 10);
+    const hashEstudiante = await bcrypt.hash('estudiante123', 10);
+    const hashDocente = await bcrypt.hash('docente123', 10);
     
-    // Insertar el usuario administrador. El $1 es un marcador de posicion seguro.
-    // ON CONFLICT (email) DO NOTHING evita que el script falle si se corre el seed denuevo
-    // postgre ignora la insercion si ese correo ya existe en la tabla.
+    // Insertamos los 3 usuarios. 
+    // ON CONFLICT DO UPDATE asegura que si el email ya existe, se actualice el hash y el rol 
+    // (soluciona el error 401 si se ejecutó un seed anterior con contraseñas diferentes).
     await pool.query(
-      `INSERT INTO usuarios (nombre, email, password_hash, rol) 
-       VALUES ('Admin Sistema', 'admin@unab.cl', $1, 'ADMIN')
-       ON CONFLICT (email) DO NOTHING`,
-      [hash] // Se inserta de forma segura el hash en el lugar de $1
+      `INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES
+        ('Admin Sistema', 'admin@unab.cl', $1, 'ADMIN'),
+        ('Juan Pérez', 'estudiante@unab.cl', $2, 'ESTUDIANTE'),
+        ('María López', 'docente@unab.cl', $3, 'DOCENTE')
+       ON CONFLICT (email) DO UPDATE 
+       SET password_hash = EXCLUDED.password_hash,
+           rol = EXCLUDED.rol`,
+      [hashAdmin, hashEstudiante, hashDocente]
     );
 
     // 2. Edificios
@@ -44,14 +48,14 @@ async function seed() {
       ON CONFLICT DO NOTHING
     `);
 
-    console.log('Seed completado');
+    console.log('✅ Seed completado');
     
   } catch (err) {
     // si falla algo cae aqui y avisa
-    console.error('Error en seed:', err);
+    console.error('❌ Error en seed:', err);
   } finally {
-	  // finally se ejecuta siempre haya salido bien o mal
-	  // pool.end cierra la conexion con postgre, asi la terminal no se queda congelada 
+    // finally se ejecuta siempre haya salido bien o mal
+    // pool.end cierra la conexion con postgre, asi la terminal no se queda congelada 
     await pool.end();
   }
 }

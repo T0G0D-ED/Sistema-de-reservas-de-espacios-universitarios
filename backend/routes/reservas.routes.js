@@ -3,6 +3,8 @@ import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 // Importar service. Controller no habla directo con el repo
 import { reservasService } from '../services/reservas.service.js';
+// 3. Pool de BD se usa solo para una consulta rapida de nombre 
+import pool from '../services/dbService.js'; 
 
 const router = Router();
 
@@ -14,19 +16,31 @@ router.use(authMiddleware);
 // POST /api/reservas - Crear una solicitud de reserva
 router.post('/', async (req, res) => {
   try {
-	  // 1. Extraer datos de la sala y horario desde el json enviado por el usuario
-    const { espacioId, fechaInicio, fechaFin, motivo } = req.body;
-    // 2. Obtener el id del usuario desde el token    
-    const usuarioId = req.usuario.id; 
+	  const { espacioId, fechaInicio, fechaFin, motivo } = req.body;
+    // Extraer tanto el ID como el EMAIL del token decodificado por el middleware
+    const { id: usuarioId, email: usuarioEmail } = req.usuario;
 
 		// 3. Validacion de presencia de datos
     if (!espacioId || !fechaInicio || !fechaFin) {
       return res.status(400).json({ error: 'espacioId, fechaInicio y fechaFin son obligatorios.' });
     }
 
+    // CONSULTA RAPIDA: Obtener el nombre del espacio para enriquecer la auditoria en MongoDB.
+    // Esto evita tener que hacer joins complejos al leer el historial de NoSQL despues.
+    const { rows } = await pool.query('SELECT nombre FROM espacios WHERE id = $1', [espacioId]);
+    const espacioNombre = rows.length > 0 ? rows[0].nombre : 'Espacio desconocido';
+
 		// 4. Llamar al servicio que revisara conflictos de horario
 		// creara la reserva en PENDIENTE 
-    const nuevaReserva = await reservasService.crearReserva(usuarioId, espacioId, fechaInicio, fechaFin, motivo);
+    const nuevaReserva = await reservasService.crearReserva(
+      usuarioId,
+      usuarioEmail,
+      espacioId, 
+      fechaInicio, 
+      fechaFin, 
+      motivo,
+      espacioNombre)
+    ;
     // Responder con 201 de created y registro creado 
     res.status(201).json(nuevaReserva);
     // Error si encuentra algo invalido 
@@ -59,9 +73,8 @@ router.patch('/:id/estado', async (req, res) => {
     const { id } = req.params;
     // 2. Extraer el nuevo estado y motivo del body
     const { nuevoEstado, motivoRechazo } = req.body;
-    // 3. Obtener datos del usuario autenticado
-    const usuarioId = req.usuario.id;
-    const usuarioRol = req.usuario.rol; // 'ESTUDIANTE', 'DOCENTE' o 'ADMIN'
+    // Extraemos ID, EMAIL y ROL del token
+    const { id: usuarioId, email: usuarioEmail, rol: usuarioRol } = req.usuario;
 
 		// 4. Validar que el estado sea uno de los permitidos
     if (!['APROBADA', 'RECHAZADA', 'CANCELADA'].includes(nuevoEstado)) {
@@ -70,7 +83,12 @@ router.patch('/:id/estado', async (req, res) => {
 		
 		// 5. Llamar al Service para cambiar el estado
     const reservaActualizada = await reservasService.cambiarEstado(
-      usuarioId, usuarioRol, id, nuevoEstado, motivoRechazo
+      usuarioId, 
+      usuarioEmail,
+      usuarioRol, 
+      id, 
+      nuevoEstado, 
+      motivoRechazo
     );
     
     // 6. Responder con la reserva actualizada
@@ -81,6 +99,21 @@ router.patch('/:id/estado', async (req, res) => {
     res.status(error.status || 500).json({ error: error.message || 'Error interno' });
   }
 });
+
+// RUTA 4: GET /api/reservas/:id/historial - Consultar auditoria (Desde MongoDB)
+router.get('/:id/historial', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Llamar al servicio para obtener la linea de tiempo de esta reserva especifica
+    const historial = await reservasService.obtenerHistorialReserva(Number(id));
+    
+    res.json(historial);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener el historial de auditoría' });
+  }
+});
+
 
 // Exportar el router para que index.js lo pueda usar
 export default router;
