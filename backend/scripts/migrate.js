@@ -17,6 +17,7 @@ async function migrate() {
     console.log(' Migración aplicada correctamente');
   } catch (err) {
     console.error('Error en migración:', err.message);
+    process.exitCode = 1;
   } finally {
     await pool.end();
   }

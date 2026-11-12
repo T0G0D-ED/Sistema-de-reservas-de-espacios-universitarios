@@ -1,0 +1,88 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:?Define POSTGRES_USER in backend/.env}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD in backend/.env}"
+      POSTGRES_DB: "${POSTGRES_DB:?Define POSTGRES_DB in backend/.env}"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER:?Define MONGO_USER in backend/.env}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD:?Define MONGO_PASSWORD in backend/.env}"
+      MONGO_INITDB_DATABASE: "${MONGO_DB:?Define MONGO_DB in backend/.env}"
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --username \"$${MONGO_INITDB_ROOT_USERNAME}\" --password \"$${MONGO_INITDB_ROOT_PASSWORD}\" --authenticationDatabase admin --eval \"db.adminCommand('ping').ok\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      PORT: "3000"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:?Define POSTGRES_USER in backend/.env}:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD in backend/.env}@postgres:5432/${POSTGRES_DB:?Define POSTGRES_DB in backend/.env}"
+      MONGO_URI: "mongodb://${MONGO_USER:?Define MONGO_USER in backend/.env}:${MONGO_PASSWORD:?Define MONGO_PASSWORD in backend/.env}@mongo:27017/${MONGO_DB:?Define MONGO_DB in backend/.env}?authSource=admin"
+    command: ["sh", "-c", "npm ci && npm run dev"]
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  frontend:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:3000
+    command: ["sh", "-c", "npm ci && npm run dev -- --host 0.0.0.0"]
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    name: reservas_pgdata
+    external: true
+  mongo_data:
+    name: reservas_mongodata
+    external: true
+  backend_node_modules:
+  frontend_node_modules:
