@@ -1,18 +1,17 @@
-const STORAGE_KEY = "reservasRealizadas";
+import { api } from "./api";
 
-export function getReservas() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+export function listarReservas() {
+  return api.get("/api/reservas");
 }
 
-export function addReserva({ espacio, ...datos }) {
-  const reserva = { id: Date.now(), espacioId: espacio.id, espacioTitulo: espacio.titulo, espacioLugar: espacio.lugar, espacioCover: espacio.cover, espacioIcon: espacio.icon, ...datos };
-  const reservas = [...getReservas(), reserva];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reservas));
-  return reserva;
+export function crearReserva({ espacioId, fechaInicio, fechaFin, motivo }) {
+  return api.post("/api/reservas", { espacioId, fechaInicio, fechaFin, motivo });
 }
 
-export function removeReserva(id) {
-  const reservas = getReservas().filter((reserva) => reserva.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reservas));
-  return reservas;
+export function cancelarReserva(id) {
+  return api.patch(`/api/reservas/${id}/estado`, { nuevoEstado: "CANCELADA" });
+}
+
+export function actualizarEstadoReserva(id, nuevoEstado, motivoRechazo) {
+  return api.patch(`/api/reservas/${id}/estado`, { nuevoEstado, motivoRechazo });
 }
