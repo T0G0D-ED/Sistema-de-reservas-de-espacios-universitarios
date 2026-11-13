@@ -3,7 +3,7 @@ import axios from 'axios';
 // URL base de la API publica del Gobierno Digital de Chile
 const API_FERIADOS_URL = 'https://apis.digital.gob.cl/fl/feriados';
 
-// Caché en memoria: { 2026: [...feriados], 2027: [...] }
+// Caché en memoria: { 2026: { feriados: [...], fuente: 'api' }, ... }
 // Evita hacer una llamada a la API por cada reserva
 const cacheFeriados = {};
 
@@ -30,12 +30,12 @@ const FERIADOS_FIJOS_RESPALDO = [
  * Obtiene los feriados de un año desde la API publica.
  * Usa caché en memoria para no saturar la API.
  * @param {number} year - Año a consultar (ej: 2026)
- * @returns {Promise<Array>} Array de feriados
+ * @returns {Promise<{anio: number, feriados: Array, fuente: 'api'|'respaldo}>}
  */
-async function obtenerFeriadosDelAno(year) {
+export async function obtenerFeriadosDelAno(year) {
   // Si ya se tienen los feriados de ese año en caché, los retornamos
   if (cacheFeriados[year]) {
-    return cacheFeriados[year];
+    return { anio: year, ...cacheFeriados[year] };
   }
 
   try {
@@ -44,8 +44,8 @@ async function obtenerFeriadosDelAno(year) {
     });
     
     if (Array.isArray(response.data) && response.data.length > 0) {
-      cacheFeriados[year] = response.data;
-      return response.data;
+      cacheFeriados[year] = { feriados: response.data, fuente: 'api' };
+      return { anio: year, ...cacheFeriados[year] };
     }
    } catch (error) {
     console.warn(`API externa de feriados caída (${error.message}). Usando respaldo local de feriados.`);
@@ -54,8 +54,8 @@ async function obtenerFeriadosDelAno(year) {
       fecha: `${year}-${f.mesDia}`,
       nombre: f.nombre,
     }));
-    cacheFeriados[year] = respaldo;
-    return respaldo;
+    cacheFeriados[year] = { feriados: respaldo, fuente: 'respaldo' };
+    return { anio: year, ...cacheFeriados[year] };
   }
 
   // Si falla la API o responde vacio, usamos el respaldo local de feriados fijos de Chile
@@ -64,8 +64,8 @@ async function obtenerFeriadosDelAno(year) {
     nombre: f.nombre,
   }));
 
-  cacheFeriados[year] = respaldo;
-  return respaldo;
+  cacheFeriados[year] = { feriados: respaldo, fuente: 'respaldo' };
+  return { anio: year, ...cacheFeriados[year] };
 }
 
 /**
@@ -93,12 +93,10 @@ export async function validarDiaHabil(fecha) {
 
   // 2. Validar feriado nacional
   const year = date.getUTCFullYear();
-  const feriados = await obtenerFeriadosDelAno(year);
+  const { feriados } = await obtenerFeriadosDelAno(year);
 
   // La API retorna fechas en formato "YYYY-MM-DD"
   const fechaStr = date.toISOString().split('T')[0];
-    console.log(`[DEBUG FERIADOS] Validando fecha: ${fechaStr} (Año: ${year})`);
-
   const feriadoEncontrado = feriados.find((f) => f.fecha === fechaStr);
 
   if (feriadoEncontrado) {
