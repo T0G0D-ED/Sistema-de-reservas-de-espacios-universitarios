@@ -1,0 +1,86 @@
+@startuml
+!theme plain
+skinparam backgroundColor #F8FAFC
+skinparam shadowing true
+skinparam roundcorner 10
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+
+' Estilo de participantes y líneas de vida
+skinparam sequence {
+  ArrowColor #475569
+  ArrowThickness 1.5
+  LifeLineBorderColor #94A3B8
+  LifeLineBackgroundColor #FFFFFF
+  
+  ParticipantBorderThickness 1.5
+  ParticipantFontStyle bold
+  
+  ActorBackgroundColor #1E293B
+  ActorBorderColor #0F172A
+  ActorFontColor #0F172A
+  
+  GroupBackgroundColor #F1F5F9
+  GroupBorderColor #CBD5E1
+  GroupHeaderFontColor #334155
+}
+
+title <size:18><b>Flujo: Crear Reserva con validación de conflicto</b></size>\n
+
+actor "Usuario" as Usuario
+
+' Participantes con colores por capa
+participant "React\n(EspaciosPage)" as FE #E0F2FE
+participant "Express\n(/reservas)" as BE #DCFCE7
+database "PostgreSQL" as PG #F3E8FF
+database "MongoDB" as MG #F3E8FF
+participant "API Feriados" as FERI #FFEDD5
+participant "Resend" as EMAIL #FFEDD5
+
+' Inicio del flujo
+Usuario -[#0284C7]> FE : Selecciona espacio y horario
+activate FE #E0F2FE
+
+FE -[#0F172A]> BE : <b>POST /reservas</b> (Bearer token)
+activate BE #DCFCE7
+
+BE -[#16A34A]> BE : authMiddleware valida JWT
+
+group Validaciones de Negocio
+  BE -[#EA580C]> FERI : ¿Es día hábil?
+  activate FERI #FFEDD5
+  FERI -[#EA580C]-> BE : Sí / No (400 si feriado)
+  deactivate FERI
+
+  BE -[#7E22CE]> PG : SELECT conflicto de horario
+  activate PG #F3E8FF
+  PG -[#7E22CE]-> BE : NULL (sin conflicto)
+  deactivate PG
+end
+
+group Persistencia y Auditoría
+  BE -[#7E22CE]> PG : INSERT reserva (estado PENDIENTE)
+  activate PG #F3E8FF
+  PG -[#7E22CE]-> BE : reserva.id = 42
+  deactivate PG
+
+  BE -[#7E22CE]> MG : INSERT evento "CREADA"
+  activate MG #F3E8FF
+  MG -[#7E22CE]-> BE : ack (registrado)
+  deactivate MG
+end
+
+group Notificación
+  BE -[#EA580C]> EMAIL : Enviar confirmación
+  activate EMAIL #FFEDD5
+  EMAIL -[#EA580C]-> BE : ok
+  deactivate EMAIL
+end
+
+BE -[#16A34A]-> FE : <b>201 Created</b> (reserva)
+deactivate BE
+
+FE -[#0284C7]-> Usuario : Toast "Reserva creada ✅"
+deactivate FE
+
+@enduml

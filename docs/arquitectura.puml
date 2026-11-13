@@ -1,0 +1,123 @@
+@startuml
+!theme plain
+skinparam backgroundColor #F8FAFC
+skinparam shadowing true
+skinparam roundcorner 12
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+skinparam defaultFontSize 13
+
+' Estilo general de las flechas
+skinparam arrow {
+  Color #475569
+  FontColor #334155
+  FontSize 11
+}
+
+' Estilo del Actor
+skinparam actor {
+  BackgroundColor #1E293B
+  BorderColor #0F172A
+  FontColor #0F172A
+}
+
+' Estilo para paquetes (capas)
+skinparam package {
+  BorderThickness 2
+  FontStyle bold
+}
+
+' Estilos personalizados por capa mediante estereotipos
+skinparam component {
+  BorderThickness 1.5
+  FontStyle bold
+}
+
+skinparam component<<front>> {
+  BackgroundColor #E0F2FE
+  BorderColor #0284C7
+  FontColor #0369A1
+}
+
+skinparam component<<back>> {
+  BackgroundColor #DCFCE7
+  BorderColor #16A34A
+  FontColor #15803D
+}
+
+skinparam component<<docs>> {
+  BackgroundColor #FEF9C3
+  BorderColor #CA8A04
+  FontColor #854D0E
+}
+
+skinparam database {
+  BackgroundColor #F3E8FF
+  BorderColor #7E22CE
+  FontColor #581C87
+  FontStyle bold
+}
+
+skinparam cloud {
+  BackgroundColor #FFEDD5
+  BorderColor #EA580C
+  FontColor #9A3412
+  FontStyle bold
+}
+
+title <size:18><b>Arquitectura Hito 3 - Sistema de Reserva de Espacios UNAB</b></size>\n
+
+actor "Estudiante / Docente / Admin" as Usuario
+
+package "Capa de Presentación: Frontend (React + Vite)" #F0F9FF {
+  [LoginPage / RegisterPage] as Login <<front>>
+  [EspaciosPage] as Espacios <<front>>
+  [ReservasPage] as Reservas <<front>>
+  [ReservaModal] as Modal <<front>>
+  [AuthContext] as AuthCtx <<front>>
+  [api.js (axios)] as Api <<front>>
+}
+
+package "Capa Lógica: Backend (Express + Node.js)" #F0FDF4 {
+  [Routes] as Routes <<back>>
+  [Middlewares (JWT + errorHandler)] as MW <<back>>
+  [Services (reglas de negocio)] as Services <<back>>
+  [Repositories (SQL)] as Repos <<back>>
+  [Swagger UI] as Swagger <<docs>>
+}
+
+package "Persistencia y Servicios Externos" #F1F5F9 {
+  database "PostgreSQL\n(SQL: estado actual)" as PG
+  database "MongoDB\n(NoSQL: auditoría)" as MG
+  cloud "API Pública\nFeriados Chile" as FERIADOS
+  cloud "Resend\n(correos)" as RESEND
+}
+
+' Relaciones de Usuario
+Usuario -[#0284C7]-> Login
+Usuario -[#0284C7]-> Espacios
+Usuario -[#0284C7]-> Reservas
+
+' Relaciones internas Frontend
+Reservas ..> Modal : abre
+Login -[#0284C7]-> Api
+Espacios -[#0284C7]-> Api
+Reservas -[#0284C7]-> Api
+Modal -[#0284C7]-> Api
+AuthCtx -[#0284C7]-> Api
+
+' Comunicación Front - Back
+Api -[#0F172A,thickness=2]-> Routes : <b>HTTP / JSON</b>
+
+' Relaciones internas Backend
+Routes -[#16A34A]-> MW : autenticar
+MW -[#16A34A]-> Services
+Services -[#16A34A]-> Repos
+Swagger .[#CA8A04].> Routes : documenta
+
+' Relaciones con Bases de Datos y APIs
+Repos -[#7E22CE]-> PG : CRUD transaccional
+Services -[#7E22CE]-> MG : registrar eventos
+Services -[#EA580C]-> FERIADOS : validar día hábil
+Services -[#EA580C]-> RESEND : confirmar/cancelar
+
+@enduml
