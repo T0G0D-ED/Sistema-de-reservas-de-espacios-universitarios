@@ -11,6 +11,9 @@ import administracionRoutes from "./routes/administracion.routes.js";
 import authRoutes from "./routes/auth.routes.js"; 
 // Importar rutas de reservas
 import reservasRoutes from "./routes/reservas.routes.js";
+import { errorHandler } from './utils/errores.js';
+// Importar configuracion de Swagger
+import { swaggerUi, swaggerSpec } from './services/swagger.js';
 
 const app = express();
 
@@ -24,7 +27,7 @@ app.use(express.json());
 connectMongo(); // LLAMAR FUNCION
 
 // Rutas existentes Resend
-app.post("/api/enviar-correo", async (req, res) => {
+app.post("/api/enviar-correo", async (req, res, next) => {
   try {
     const { tipo, ...datos } = req.body;
     let resultado;
@@ -37,8 +40,7 @@ app.post("/api/enviar-correo", async (req, res) => {
 
     res.json(resultado);
   } catch (error) {
-    console.error("Error al procesar el correo en el backend:", error.message);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
@@ -69,9 +71,22 @@ app.get("/api/health", async (req, res) => {
   });
 });
 
+
+// DOCUMENTACION SWAGGER
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Ruta opcional para obtener el JSON crudo de la especificacion
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+// Middleware de errores global 
+app.use(errorHandler);
+
 // Encendido del Servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`API corriendo en http://localhost:${PORT}`);
-  console.log(`Documentación Swagger (pendiente): http://localhost:${PORT}/api-docs`);
+  console.log(`Documentación Swagger disponible en http://localhost:${PORT}/api-docs`);
 });
