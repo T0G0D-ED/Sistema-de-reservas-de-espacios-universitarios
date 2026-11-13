@@ -121,3 +121,9 @@ docker compose --env-file backend/.env down
 ```
 
 Los correos requieren una clave válida en `RESEND_API_KEY` y un `RESEND_TEST_EMAIL` asociado a tu cuenta. Tanto las confirmaciones como las cancelaciones se envían a esa dirección de prueba. Si cambias `backend/.env`, recrea los contenedores con `docker compose --env-file backend/.env up -d --force-recreate`.
+
+## Pruebas automatizadas
+
+Las pruebas de reglas de reserva usan el ejecutor incluido en Node.js y no necesitan conectarse a PostgreSQL, MongoDB ni a la API de feriados.
+
+Desde la carpeta backend, ejecuta npm ci y luego npm test.
