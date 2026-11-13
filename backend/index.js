@@ -11,6 +11,7 @@ import administracionRoutes from "./routes/administracion.routes.js";
 import authRoutes from "./routes/auth.routes.js"; 
 // Importar rutas de reservas
 import reservasRoutes from "./routes/reservas.routes.js";
+import feriadosRoutes from "./routes/feriados.routes.js";
 import { errorHandler } from './utils/errores.js';
 // Importar configuracion de Swagger
 import { swaggerUi, swaggerSpec } from './services/swagger.js';
@@ -60,6 +61,7 @@ app.use("/api/edificios", edificiosRoutes);
 // Las peticiones a /api/reservas las maneja reservasRoutes
 // Todas las rutas dentro de este archivo están protegidas por authMiddleware
 app.use("/api/reservas", reservasRoutes); 
+app.use("/api/feriados", feriadosRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/administracion", administracionRoutes);
 
