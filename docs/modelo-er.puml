@@ -1,0 +1,123 @@
+@startuml
+!theme plain
+skinparam backgroundColor #F8FAFC
+skinparam linetype ortho
+skinparam shadowing true
+skinparam roundcorner 10
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+
+' Estilo general de las tablas (entidades)
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  BorderThickness 1.5
+  HeaderBackgroundColor #F1F5F9
+  FontColor #1E293B
+  AttributeFontColor #334155
+  AttributeFontSize 12
+}
+
+' Colores por dominio de entidad
+skinparam class<<usuarios>> {
+  HeaderBackgroundColor #E0F2FE
+  BorderColor #0284C7
+}
+
+skinparam class<<infra>> {
+  HeaderBackgroundColor #DCFCE7
+  BorderColor #16A34A
+}
+
+skinparam class<<core>> {
+  HeaderBackgroundColor #F3E8FF
+  BorderColor #7E22CE
+}
+
+' Estilo de flechas y notas
+skinparam arrow {
+  Color #475569
+  FontColor #334155
+  FontSize 11
+}
+
+skinparam note {
+  BackgroundColor #FEF9C3
+  BorderColor #CA8A04
+  FontColor #854D0E
+  FontSize 11
+}
+
+title <size:18><b>Modelo Entidad-Relación - Sistema de Reserva de Espacios UNAB</b></size>\n
+
+entity "usuarios" as usuarios <<usuarios>> {
+  * <b>id</b> : SERIAL <<PK>>
+  --
+  * nombre : VARCHAR(100)
+  * email : VARCHAR(150) <<UNIQUE>>
+  * password_hash : VARCHAR(255)
+  * rol : ENUM(ESTUDIANTE, DOCENTE, ADMIN)
+  * activo : BOOLEAN
+  * created_at : TIMESTAMP
+}
+
+entity "edificios" as edificios <<infra>> {
+  * <b>id</b> : SERIAL <<PK>>
+  --
+  * nombre : VARCHAR(100)
+  * codigo : VARCHAR(20) <<UNIQUE>>
+  ubicacion : VARCHAR(200)
+  descripcion : TEXT
+  * activo : BOOLEAN
+}
+
+entity "espacios" as espacios <<infra>> {
+  * <b>id</b> : SERIAL <<PK>>
+  --
+  * nombre : VARCHAR(100)
+  * tipo : ENUM(SALA, LAB, AUDITORIO, ESTUDIO)
+  * capacidad : INT <<CHECK > 0>>
+  ubicacion : VARCHAR(150)
+  descripcion : TEXT
+  * disponible : BOOLEAN
+  --
+  * <b>edificio_id</b> : INT <<FK>>
+}
+
+entity "equipamiento" as equipamiento <<infra>> {
+  * <b>id</b> : SERIAL <<PK>>
+  --
+  * nombre : VARCHAR(100)
+  * tipo : VARCHAR(50)
+  * cantidad : INT <<CHECK > 0>>
+  --
+  * <b>espacio_id</b> : INT <<FK>>
+}
+
+entity "reservas" as reservas <<core>> {
+  * <b>id</b> : SERIAL <<PK>>
+  --
+  * fecha_inicio : TIMESTAMP
+  * fecha_fin : TIMESTAMP <<CHECK fin > inicio>>
+  * estado : ENUM(PENDIENTE, APROBADA, RECHAZADA, CANCELADA)
+  motivo : TEXT
+  motivo_rechazo : TEXT
+  --
+  * <b>usuario_id</b> : INT <<FK>>
+  * <b>espacio_id</b> : INT <<FK>>
+  <b>aprobada_por</b> : INT <<FK, NULLABLE>>
+}
+
+' Relaciones
+edificios ||--o{ espacios : "  contiene  "
+espacios ||--o{ equipamiento : "  incluye  "
+espacios ||--o{ reservas : "  se reserva en  "
+usuarios ||--o{ reservas : "  solicita  "
+usuarios |o--o{ reservas : "  aprueba / rechaza  "
+
+note right of reservas::aprobada_por
+  <b>FK nullable:</b> es NULL mientras
+  la reserva está en estado PENDIENTE.
+end note
+
+@enduml
