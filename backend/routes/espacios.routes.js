@@ -4,7 +4,7 @@ import pool from '../services/dbService.js';
 const router = Router();
 
 // GET /api/espacios - Listar todos los espacios (Público)
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const query = `
       SELECT e.*, b.nombre AS edificio_nombre, b.codigo AS edificio_codigo
@@ -16,8 +16,7 @@ router.get('/', async (req, res) => {
     const { rows } = await pool.query(query);
     res.json(rows);
   } catch (err) {
-    console.error('Error al listar espacios:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    next(err); // En lugar de console.error + res.status(500), pasar al middleware global
   }
 });
 

@@ -11,10 +11,49 @@ const router = Router();
 // Todas las rutas definidas debajo de esta linea exigien un token JWT valido
 router.use(authMiddleware);
 
+/**
+ * @swagger
+ * /api/reservas:
+ *   post:
+ *     summary: Crear una nueva solicitud de reserva
+ *     tags: [Reservas]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - espacioId
+ *               - fechaInicio
+ *               - fechaFin
+ *             properties:
+ *               espacioId:
+ *                 type: integer
+ *                 example: 1
+ *               fechaInicio:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2026-11-20T10:00:00Z"
+ *               fechaFin:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2026-11-20T12:00:00Z"
+ *               motivo:
+ *                 type: string
+ *                 example: "Reunión de proyecto de Minería de Datos"
+ *     responses:
+ *       201:
+ *         description: Reserva creada exitosamente (Estado PENDIENTE)
+ *       400:
+ *         description: Fechas inválidas o día festivo
+ *       409:
+ *         description: Conflicto de horario con otra reserva
+ */
 // Ruta 1
 // Post para crear nuevo recurso 
 // POST /api/reservas - Crear una solicitud de reserva
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
 	  const { espacioId, fechaInicio, fechaFin, motivo } = req.body;
     // Extraer tanto el ID como el EMAIL del token decodificado por el middleware
@@ -39,20 +78,32 @@ router.post('/', async (req, res) => {
       fechaInicio, 
       fechaFin, 
       motivo,
-      espacioNombre)
-    ;
+      espacioNombre
+    );
     // Responder con 201 de created y registro creado 
     res.status(201).json(nuevaReserva);
     // Error si encuentra algo invalido 
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message || 'Error interno' });
+    next(error);
   }
 });
 
+/**
+ * @swagger
+ * /api/reservas:
+ *   get:
+ *     summary: Listar reservas (todas para ADMIN/DOCENTE, propias para ESTUDIANTE)
+ *     tags: [Reservas]
+ *     responses:
+ *       200:
+ *         description: Lista de reservas obtenida exitosamente
+ *       401:
+ *         description: Token no proporcionado o inválido
+ */
 // Ruta 2
 // Listar las reservas del usuario conectado
 // GET /api/reservas - Listar mis reservas
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const { id: usuarioId, rol } = req.usuario;
     const reservas = rol === 'ADMIN' || rol === 'DOCENTE'
@@ -60,15 +111,51 @@ router.get('/', async (req, res) => {
       : await reservasService.obtenerMisReservas(usuarioId);
     res.json(reservas);
   } catch (error) {
-    console.error('Error al obtener reservas:', error);
-    res.status(500).json({ error: 'Error al obtener reservas' });
+    next(error);
   }
 });
 
+/**
+ * @swagger
+ * /api/reservas/{id}/estado:
+ *   patch:
+ *     summary: Cambiar el estado de una reserva (Aprobar, Rechazar, Cancelar)
+ *     tags: [Reservas]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la reserva
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nuevoEstado
+ *             properties:
+ *               nuevoEstado:
+ *                 type: string
+ *                 enum: [APROBADA, RECHAZADA, CANCELADA]
+ *                 example: "APROBADA"
+ *               motivoRechazo:
+ *                 type: string
+ *                 example: "Sala en mantenimiento"
+ *     responses:
+ *       200:
+ *         description: Estado de la reserva actualizado
+ *       403:
+ *         description: Sin permisos para realizar esta acción
+ *       404:
+ *         description: Reserva no encontrada
+ */
 //Ruta 3
 // Aprobar, rechazar o cancelar una reserva existente
 // PATCH /api/reservas/:id/estado 
-router.patch('/:id/estado', async (req, res) => {
+router.patch('/:id/estado', async (req, res, next) => {
   try {
 	  // 1. Extraer el ID de la URL (req.params)
     const { id } = req.params;
@@ -97,12 +184,33 @@ router.patch('/:id/estado', async (req, res) => {
     
     // Manejo de errores (403 Forbidden, 404 Not Found, 400 Bad Request, etc.)
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message || 'Error interno' });
+    next(error);
   }
 });
 
+/**
+ * @swagger
+ * /api/reservas/{id}/historial:
+ *   get:
+ *     summary: Consultar historial de auditoría de una reserva (MongoDB)
+ *     tags: [Reservas]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la reserva
+ *     responses:
+ *       200:
+ *         description: Línea de tiempo de eventos de la reserva
+ *       403:
+ *         description: Sin permisos para ver el historial
+ *       404:
+ *         description: Reserva no encontrada
+ */
 // RUTA 4: GET /api/reservas/:id/historial - Consultar auditoria (Desde MongoDB)
-router.get('/:id/historial', async (req, res) => {
+router.get('/:id/historial', async (req, res, next) => {
   try {
     const { id } = req.params;
     const { id: usuarioId, rol } = req.usuario;
@@ -110,10 +218,9 @@ router.get('/:id/historial', async (req, res) => {
     
     res.json(historial);
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message || 'Error al obtener el historial de auditoría' });
+    next(error);
   }
 });
-
 
 // Exportar el router para que index.js lo pueda usar
 export default router;

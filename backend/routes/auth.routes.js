@@ -9,9 +9,44 @@ import { authService } from '../services/auth.service.js';
 // Todas las rutas definidas aqui se agruparan bajo /api/auth
 const router = Router();
 
+/**
+ * @swagger
+ * /api/auth/registro:
+ *   post:
+ *     summary: Registrar una nueva cuenta de estudiante
+ *     tags: [Autenticación]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nombre
+ *               - email
+ *               - password
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 example: Juan Pérez
+ *               email:
+ *                 type: string
+ *                 example: juan.perez@unab.cl
+ *               password:
+ *                 type: string
+ *                 example: Password123!
+ *     responses:
+ *       201:
+ *         description: Usuario registrado exitosamente
+ *       400:
+ *         description: Faltan campos obligatorios
+ *       409:
+ *         description: El correo ya está registrado
+ */
 // Ruta 1: Crear una nueva cuenta  
 // Endpoint: POST /api/auth/registro
-router.post('/registro', async (req, res) => {
+router.post('/registro', async (req, res, next) => {
 // 1. Extraer los datos que el cliente envio en el cuerpo JSON de la peticion 
   try {
     const { nombre, email, password } = req.body;
@@ -32,15 +67,51 @@ router.post('/registro', async (req, res) => {
     // El servicio lanza objetos de error, si es definido como 409 o 401 se usa
     // Si es interno por la BD o por el estilo se usa 500 error interno
   } catch (error) {
-    const status = error.status || 500;
-    res.status(status).json({ error: error.message || 'Error interno del servidor' });
+    next(error);
   }
 });
 
-
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Iniciar sesión y obtener token JWT
+ *     tags: [Autenticación]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: admin
+ *               password:
+ *                 type: string
+ *                 example: admin
+ *     responses:
+ *       200:
+ *         description: Login exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 usuario:
+ *                   type: object
+ *       401:
+ *         description: Credenciales inválidas
+ */
 // Ruta 2: Iniciar sesion y obtener el token
 // Endpoint: POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', async (req, res, next) => {
   try {
 	  // 1. Extraer identificador y contraseña del JSON enviado por el usuario
     const { identificador, email, password } = req.body;
@@ -58,8 +129,7 @@ router.post('/login', async (req, res) => {
     res.json(data);
   } catch (error) {
 	  // Si fallan las credenciales se atrapa el status 401 del servicio 
-    const status = error.status || 500;
-    res.status(status).json({ error: error.message || 'Error interno del servidor' });
+    next(error);
   }
 });
 
