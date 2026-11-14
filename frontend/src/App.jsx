@@ -27,7 +27,7 @@ function App() {
   const edificios = useEdificios();
   const reservas = useReservas(auth.sesion);
   const historial = useHistorial(reservas.reservas, Boolean(auth.sesion?.token));
-  const dashboard = useDashboard(esGestor && vista === "dashboard");
+  const dashboard = useDashboard(esGestor && auth.sesion?.usuario.rol !== "ADMIN" && vista === "dashboard");
   const administracion = useAdministracion(auth.sesion?.usuario.rol === "ADMIN" && vista === "administracion");
 
   function notificar(texto, tipo = "success") {
@@ -167,7 +167,7 @@ function App() {
             onReintentar={historial.reintentar}
           />
         )}
-        {vista === "dashboard" && esGestor && (
+        {vista === "dashboard" && esGestor && auth.sesion?.usuario.rol !== "ADMIN" && (
           <DashboardPage
             datos={dashboard.datos}
             cargando={dashboard.cargando}

@@ -20,19 +20,19 @@ function DashboardPage({ datos, cargando, error, onReintentar }) {
     <section>
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-[#263762]">Dashboard de utilización</h1>
-        <p className="mt-1 text-gray-600">Reservas pendientes o aprobadas durante los últimos {datos.periodoDias} días.</p>
+        <p className="mt-1 text-gray-600">Reservas pendientes o aprobadas durante los próximos {datos.periodoDias} días.</p>
       </header>
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <article className="rounded-xl border border-gray-200 bg-white p-5">
-          <p className="text-sm text-gray-600">Espacios disponibles</p>
+          <p className="text-sm text-gray-600">Espacios habilitados</p>
           <p className="mt-2 text-3xl font-bold text-[#263762]">{datos.resumen.espacios}</p>
         </article>
         <article className="rounded-xl border border-gray-200 bg-white p-5">
-          <p className="text-sm text-gray-600">Reservas activas</p>
+          <p className="text-sm text-gray-600">Reservas en el periodo</p>
           <p className="mt-2 text-3xl font-bold text-[#263762]">{datos.resumen.reservasActivas}</p>
         </article>
         <article className="rounded-xl border border-gray-200 bg-white p-5">
-          <p className="text-sm text-gray-600">Horas reservadas</p>
+          <p className="text-sm text-gray-600">Horas reservadas en 30 días</p>
           <p className="mt-2 text-3xl font-bold text-[#263762]">{datos.resumen.horasReservadas}</p>
         </article>
       </div>
