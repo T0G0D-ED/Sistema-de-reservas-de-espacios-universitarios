@@ -31,7 +31,7 @@ function EspacioCard({ espacio, onReservar }) {
   return (
     <article className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:shadow-xl/40 hover:-translate-y-1 transition-all duration-300">
       <div className="relative h-40 flex items-center justify-center" style={bgStyle}>
-        <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/25 backdrop-blur text-white text-xs font-medium">
+        <span className="absolute left-3 right-3 top-3 break-words rounded-full bg-white/25 px-3 py-1 text-center text-xs font-medium text-white backdrop-blur">
           {espacio.nombre}
         </span>
         <span className="flex h-13 w-13 items-center justify-center rounded-xl bg-white/15">
@@ -44,9 +44,9 @@ function EspacioCard({ espacio, onReservar }) {
       </div>
       
       <div className="p-5 flex flex-col flex-1">
-        <h3 className="text-lg font-semibold text-gray-900">{espacio.nombre}</h3>
-        <p className="text-sm text-blue-600 mb-2">{espacio.edificio_nombre}</p>
-        <p className="text-sm text-gray-600 mb-2">{espacio.descripcion}</p>
+        <h3 className="break-words text-lg font-semibold text-gray-900">{espacio.nombre}</h3>
+        <p className="mb-2 break-words text-sm text-blue-600">{espacio.edificio_nombre}</p>
+        <p className="mb-2 break-words text-sm text-gray-600">{espacio.descripcion}</p>
         <p className="text-sm text-gray-600 mb-2 font-medium">Capacidad: {espacio.capacidad} personas</p>
         
         {/* Reemplazamos los tags por el tipo de espacio para evitar errores si no viene del JSON */}
