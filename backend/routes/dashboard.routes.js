@@ -16,7 +16,7 @@ router.get('/utilizacion', async (req, res) => {
   try {
     const { rows } = await pool.query(`
       WITH periodo AS (
-        SELECT NOW() - INTERVAL '30 days' AS inicio, NOW() AS fin
+        SELECT NOW() AS inicio, NOW() + INTERVAL '30 days' AS fin
       )
       SELECT
         e.id AS espacio_id,
@@ -25,11 +25,14 @@ router.get('/utilizacion', async (req, res) => {
         b.id AS edificio_id,
         b.nombre AS edificio_nombre,
         COUNT(r.id)::int AS reservas_activas,
-        ROUND(COALESCE(SUM(
-          EXTRACT(EPOCH FROM (
-            LEAST(r.fecha_fin, periodo.fin) - GREATEST(r.fecha_inicio, periodo.inicio)
-          )) / 3600
-        ), 0)::numeric, 2) AS horas_reservadas
+        ROUND(COALESCE(
+          SUM(
+            EXTRACT(EPOCH FROM (
+              LEAST(r.fecha_fin, periodo.fin) - GREATEST(r.fecha_inicio, periodo.inicio)
+            )) / 3600
+          ) FILTER (WHERE r.id IS NOT NULL),
+          0
+        )::numeric, 2) AS horas_reservadas
       FROM espacios e
       JOIN edificios b ON b.id = e.edificio_id
       CROSS JOIN periodo

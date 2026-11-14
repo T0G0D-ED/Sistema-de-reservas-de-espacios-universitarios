@@ -3,7 +3,12 @@ import { reservasRepo } from '../repositories/reservas.repo.js';
 import { EventoReserva } from '../models/EventoReserva.js';
 import { validarDiaHabil } from '../utils/feriados.js'; //
 
-export const reservasService = {
+export function crearReservasService({
+  repository = reservasRepo,
+  auditModel = EventoReserva,
+  checkBusinessDay = validarDiaHabil,
+} = {}) {
+  return {
 
   // Funcion 1: Solicitar nueva reserva (Escribe en PostgreSQL + Audita en MongoDB)
   async crearReserva(usuarioId, usuarioEmail, espacioId, fechaInicio, fechaFin, motivo, espacioNombre = null) {
@@ -14,14 +19,14 @@ export const reservasService = {
     }
 
     // 2. Validar dia habil (API de feriados de Chile)
-    const validacionDia = await validarDiaHabil(fechaInicio);
+    const validacionDia = await checkBusinessDay(fechaInicio);
     if (!validacionDia.esHabil) {
       throw { status: 400, message: validacionDia.motivo };
     } 
 
     // 3. Validacion de conflicto de horario en PostgreSQL
     // Se pregunta al repositorio si si hay algo reservado en el rango de tiempo
-    const conflicto = await reservasRepo.buscarConflicto(espacioId, fechaInicio, fechaFin);
+    const conflicto = await repository.buscarConflicto(espacioId, fechaInicio, fechaFin);
     if (conflicto) {
       throw { 
         status: 409, 
@@ -30,11 +35,11 @@ export const reservasService = {
     }
 
     // 4.  Crear el registro transaccional en PostgreSQL (estado inicial: PENDIENTE)
-    const nuevaReserva = await reservasRepo.crear(usuarioId, espacioId, fechaInicio, fechaFin, motivo);
+    const nuevaReserva = await repository.crear(usuarioId, espacioId, fechaInicio, fechaFin, motivo);
 
     // 5. Registrar el evento inicial en MongoDB Atlas (Auditoria inmutable)
     try {
-      await EventoReserva.create({
+      await auditModel.create({
         reservaId: nuevaReserva.id, // Vinculamos con el ID recien generado por PostgreSQL
         tipoEvento: 'CREADA',
         actorId: usuarioId,
@@ -56,17 +61,17 @@ export const reservasService = {
 
   // Función 2: Consultar el historial personal de reservas (Lectura desde PostgreSQL)
   async obtenerMisReservas(usuarioId) {
-    return await reservasRepo.listarPorUsuario(usuarioId);
+    return await repository.listarPorUsuario(usuarioId);
   },
 
   async obtenerTodas() {
-    return await reservasRepo.listarTodas();
+    return await repository.listarTodas();
   },
 
   // Función 3: Cambiar estado de la reserva (Actualiza en PostgreSQL + Audita en MongoDB)
   async cambiarEstado(usuarioId, usuarioEmail, usuarioRol, reservaId, nuevoEstado, motivoRechazo = null) {
     // 1. Verificar que la reserva exista en PostgreSQL
-    const reserva = await reservasRepo.obtenerPorId(reservaId);
+    const reserva = await repository.obtenerPorId(reservaId);
     if (!reserva) {
       throw { status: 404, message: 'Reserva no encontrada.' };
     }
@@ -100,11 +105,11 @@ export const reservasService = {
     const aprobadaPor = (nuevoEstado === 'APROBADA' || nuevoEstado === 'RECHAZADA') ? usuarioId : null;
     
     // 5. Ejecutar actualizacion del estado actual en PostgreSQL
-    const reservaActualizada = await reservasRepo.actualizarEstado(reservaId, nuevoEstado, motivoRechazo, aprobadaPor);
+    const reservaActualizada = await repository.actualizarEstado(reservaId, nuevoEstado, motivoRechazo, aprobadaPor);
 
     // 6. Registrar el cambio de estado en MongoDB Atlas
     try {
-      await EventoReserva.create({
+      await auditModel.create({
         reservaId: Number(reservaId),
         tipoEvento: nuevoEstado, // 'APROBADA', 'RECHAZADA' o 'CANCELADA'
         actorId: usuarioId,
@@ -123,7 +128,7 @@ export const reservasService = {
 
   // Función 4: Consultar la linea de tiempo de una reserva desde MongoDB
   async obtenerHistorialReserva(reservaId, usuarioId, usuarioRol) {
-    const reserva = await reservasRepo.obtenerPorId(reservaId);
+    const reserva = await repository.obtenerPorId(reservaId);
     if (!reserva) {
       throw { status: 404, message: 'Reserva no encontrada.' };
     }
@@ -134,7 +139,10 @@ export const reservasService = {
     }
 
     // Busca todos los eventos de esa reserva y los ordena del mas antiguo al más reciente (1 = ascendente)
-    const eventos = await EventoReserva.find({ reservaId: Number(reservaId) }).sort({ fecha: 1 });
+    const eventos = await auditModel.find({ reservaId: Number(reservaId) }).sort({ fecha: 1 });
     return eventos;
   }
-};
+  };
+}
+
+export const reservasService = crearReservasService();

@@ -36,7 +36,7 @@ function ReservasPage({
         </p>
       </header>
       {reservas.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white py-16 text-center shadow-sm">
+        <div role="status" className="rounded-xl border border-gray-200 bg-white py-16 text-center shadow-sm">
           <span className="mb-3 block text-5xl">📅</span>
           <p className="text-lg font-semibold text-gray-700">{esGestor ? "No hay solicitudes registradas" : "No tienes reservas registradas"}</p>
           <p className="mt-1 text-sm text-gray-500">Las solicitudes creadas aparecerán aquí.</p>

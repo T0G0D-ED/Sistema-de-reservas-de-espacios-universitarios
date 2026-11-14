@@ -12,25 +12,27 @@ function DashboardPage({ datos, cargando, error, onReintentar }) {
     );
   }
 
-  if (!datos) return null;
+  if (!datos) {
+    return <p role="status" aria-live="polite" className="py-16 text-center text-gray-600">Preparando datos de utilización...</p>;
+  }
 
   return (
     <section>
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-[#263762]">Dashboard de utilización</h1>
-        <p className="mt-1 text-gray-600">Reservas pendientes o aprobadas durante los últimos {datos.periodoDias} días.</p>
+        <p className="mt-1 text-gray-600">Reservas pendientes o aprobadas durante los próximos {datos.periodoDias} días.</p>
       </header>
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <article className="rounded-xl border border-gray-200 bg-white p-5">
-          <p className="text-sm text-gray-600">Espacios disponibles</p>
+          <p className="text-sm text-gray-600">Espacios habilitados</p>
           <p className="mt-2 text-3xl font-bold text-[#263762]">{datos.resumen.espacios}</p>
         </article>
         <article className="rounded-xl border border-gray-200 bg-white p-5">
-          <p className="text-sm text-gray-600">Reservas activas</p>
+          <p className="text-sm text-gray-600">Reservas en el periodo</p>
           <p className="mt-2 text-3xl font-bold text-[#263762]">{datos.resumen.reservasActivas}</p>
         </article>
         <article className="rounded-xl border border-gray-200 bg-white p-5">
-          <p className="text-sm text-gray-600">Horas reservadas</p>
+          <p className="text-sm text-gray-600">Horas reservadas en 30 días</p>
           <p className="mt-2 text-3xl font-bold text-[#263762]">{datos.resumen.horasReservadas}</p>
         </article>
       </div>
@@ -39,7 +41,7 @@ function DashboardPage({ datos, cargando, error, onReintentar }) {
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
           <h2 className="border-b border-gray-100 px-5 py-4 font-semibold text-gray-900">Utilización por edificio</h2>
           {datos.porEdificio.length === 0 ? (
-            <p className="p-5 text-sm text-gray-600">No hay edificios con espacios disponibles.</p>
+            <p role="status" className="p-5 text-sm text-gray-600">No hay edificios con espacios disponibles.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -64,7 +66,7 @@ function DashboardPage({ datos, cargando, error, onReintentar }) {
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
           <h2 className="border-b border-gray-100 px-5 py-4 font-semibold text-gray-900">Utilización por espacio</h2>
           {datos.espacios.length === 0 ? (
-            <p className="p-5 text-sm text-gray-600">No hay espacios disponibles.</p>
+            <p role="status" className="p-5 text-sm text-gray-600">No hay espacios disponibles.</p>
           ) : (
             <div className="max-h-96 overflow-auto">
               <table className="w-full text-left text-sm">
