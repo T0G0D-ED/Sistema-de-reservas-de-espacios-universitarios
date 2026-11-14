@@ -87,6 +87,14 @@ Integrada en el **backend** para enviar correos transaccionales de confirmación
 
 ---
 
+## API de feriados
+
+El backend consulta la API pública de feriados de Gobierno Digital de Chile mediante `GET https://apis.digital.gob.cl/fl/feriados/{año}`. De la respuesta utiliza la fecha (`fecha`) y el nombre (`nombre`) de cada feriado para impedir solicitudes en días festivos.
+
+El frontend no consulta directamente al proveedor externo. Obtiene el calendario desde `GET /api/feriados/{año}` del propio backend; así se comparte el mismo origen de datos con la validación que se ejecuta al crear una reserva. La ruta es pública y también está descrita en Swagger, disponible en `http://localhost:3000/api-docs` al iniciar el backend.
+
+Si el proveedor externo no responde o entrega una lista vacía, el backend informa `fuente: "respaldo"` y usa una lista local de feriados fijos. Ese respaldo no incluye todos los feriados móviles, por lo que la interfaz muestra un aviso y la lista no reemplaza la validación del calendario oficial cuando el proveedor vuelve a estar disponible.
+
 ## Instrucciones para ejecutar el proyecto
 
 Se necesita [Docker Desktop](https://www.docker.com/products/docker-desktop/) con Docker Compose. El Compose de desarrollo levanta el frontend, el backend, PostgreSQL y MongoDB. El código se monta como volumen para permitir la recarga durante el desarrollo.
