@@ -12,20 +12,20 @@ function Header({ vista, onCambiarVista, totalReservas, usuario, esGestor, onAbr
 
   return (
     <header className="text-gray-600 bg-white">
-      <div className="container mx-auto flex flex-col md:flex-row items-center justify-between p-5">
-        <button type="button" onClick={() => onCambiarVista("espacios")} className="mb-4 flex items-center text-gray-900 md:mb-0">
-          <img src={logoUnab} alt="Logo UNAB" className="w-35 h-15 p-2" />
-          <span className="ml-3 text-xl text-[#263762] font-semibold md:border-l md:border-gray-400 md:pl-4">ReservaUNAB</span>
+      <div className="container mx-auto flex flex-col gap-3 p-4 sm:p-5 md:flex-row md:items-center md:justify-between md:gap-0">
+        <button type="button" onClick={() => onCambiarVista("espacios")} className="mb-1 flex max-w-full items-center text-gray-900 md:mb-0">
+          <img src={logoUnab} alt="Logo UNAB" className="h-12 w-24 object-contain p-1 sm:h-14 sm:w-32" />
+          <span className="ml-2 truncate text-lg font-semibold text-[#263762] sm:text-xl md:border-l md:border-gray-400 md:pl-4">ReservaUNAB</span>
         </button>
-        <nav className="flex flex-wrap items-center justify-center gap-4 text-sm md:ml-5 md:pl-5 md:text-base">
+        <nav aria-label="Navegación principal" className="flex w-full min-w-0 flex-nowrap items-center justify-start gap-4 overflow-x-auto px-1 pb-2 text-sm sm:gap-5 md:ml-5 md:w-auto md:flex-wrap md:justify-center md:overflow-visible md:pb-0 md:pl-5 md:text-base">
           {vistas.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => onCambiarVista(item.id)}
               className={vista === item.id
-                ? "flex items-center gap-1 border-b-2 border-[#263762] pb-1 font-semibold text-[#263762]"
-                : "flex items-center gap-1 text-gray-500 hover:text-[#263762]"}
+                ? "flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap border-b-2 border-[#263762] pb-1 font-semibold text-[#263762]"
+                : "flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap text-gray-500 hover:text-[#263762]"}
             >
               {item.etiqueta}
               {item.id === "reservas" && (
@@ -34,12 +34,12 @@ function Header({ vista, onCambiarVista, totalReservas, usuario, esGestor, onAbr
             </button>
           ))}
         </nav>
-        <div className="mt-3 flex items-center gap-3 md:ml-auto md:mt-0">
-          {usuario && <span className="text-sm text-gray-600">{usuario.nombre}</span>}
+        <div className="mt-1 flex max-w-full items-center justify-center gap-2 sm:gap-3 md:ml-auto md:mt-0">
+          {usuario && <span className="max-w-[9rem] truncate text-xs text-gray-600 sm:max-w-[14rem] sm:text-sm">{usuario.nombre}</span>}
           <button
             type="button"
             onClick={usuario ? onCerrarSesion : onAbrirSesion}
-            className="px-4 py-2 bg-[#263762] text-white rounded-full font-light hover:bg-[#3B5597]"
+            className="min-h-11 whitespace-nowrap rounded-full bg-[#263762] px-3 py-2 text-sm font-light text-white hover:bg-[#3B5597] sm:px-4"
           >
             {usuario ? "Cerrar sesión" : "Iniciar sesión"}
           </button>

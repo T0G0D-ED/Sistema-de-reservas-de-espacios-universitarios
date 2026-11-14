@@ -109,7 +109,7 @@ function App() {
         onAbrirSesion={auth.abrirAuth}
         onCerrarSesion={cerrarSesion}
       />
-      <main className="container mx-auto px-5 py-8">
+      <main className="container mx-auto px-4 py-6 sm:px-5 sm:py-8">
         {vista === "espacios" && (
           <EspaciosPage
             espacios={espacios.espacios}
