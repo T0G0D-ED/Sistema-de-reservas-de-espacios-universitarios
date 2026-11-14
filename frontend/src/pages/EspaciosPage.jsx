@@ -40,7 +40,7 @@ function EspaciosPage({ espacios, cargando, error, onReintentar, onReservar }) {
 
   if (cargando) {
     return (
-      <section className="flex items-center justify-center min-h-[400px]">
+      <section role="status" aria-live="polite" className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando espacios disponibles...</p>
@@ -51,7 +51,7 @@ function EspaciosPage({ espacios, cargando, error, onReintentar, onReservar }) {
 
   if (error) {
     return (
-      <section className="flex items-center justify-center min-h-[400px]">
+      <section role="alert" className="flex items-center justify-center min-h-[400px]">
         <div className="text-center bg-red-50 border border-red-200 rounded-xl p-8 max-w-md">
           <p className="text-red-600 font-medium mb-2">⚠️ {error}</p>
           <button 
@@ -122,12 +122,31 @@ function EspaciosPage({ espacios, cargando, error, onReintentar, onReservar }) {
         </div>
 
         {/* Contador */}
-        <p className="text-sm text-black mb-4 mt-4">
-          {filtrados.length === 0 
-            ? "No se encontraron espacios con esos filtros." 
-            : `${filtrados.length} de ${espacios.length} espacios disponibles`
-          }
-        </p>
+        {filtrados.length === 0 ? (
+          <div role="status" className="my-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center">
+            <p className="font-medium text-gray-700">
+              {espacios.length === 0 ? "No hay espacios disponibles por ahora." : "No se encontraron espacios con esos filtros."}
+            </p>
+            {espacios.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setBusqueda("");
+                  setEdificio("");
+                  setTipo("");
+                  setCapacidad("");
+                }}
+                className="mt-3 text-sm font-medium text-blue-700 underline"
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        ) : (
+          <p role="status" className="mb-4 mt-4 text-sm text-black">
+            {filtrados.length} de {espacios.length} espacios disponibles
+          </p>
+        )}
 
         {/* Grid de espacios */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

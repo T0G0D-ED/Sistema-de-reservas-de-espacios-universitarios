@@ -12,7 +12,9 @@ function DashboardPage({ datos, cargando, error, onReintentar }) {
     );
   }
 
-  if (!datos) return null;
+  if (!datos) {
+    return <p role="status" aria-live="polite" className="py-16 text-center text-gray-600">Preparando datos de utilización...</p>;
+  }
 
   return (
     <section>
@@ -39,7 +41,7 @@ function DashboardPage({ datos, cargando, error, onReintentar }) {
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
           <h2 className="border-b border-gray-100 px-5 py-4 font-semibold text-gray-900">Utilización por edificio</h2>
           {datos.porEdificio.length === 0 ? (
-            <p className="p-5 text-sm text-gray-600">No hay edificios con espacios disponibles.</p>
+            <p role="status" className="p-5 text-sm text-gray-600">No hay edificios con espacios disponibles.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -64,7 +66,7 @@ function DashboardPage({ datos, cargando, error, onReintentar }) {
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
           <h2 className="border-b border-gray-100 px-5 py-4 font-semibold text-gray-900">Utilización por espacio</h2>
           {datos.espacios.length === 0 ? (
-            <p className="p-5 text-sm text-gray-600">No hay espacios disponibles.</p>
+            <p role="status" className="p-5 text-sm text-gray-600">No hay espacios disponibles.</p>
           ) : (
             <div className="max-h-96 overflow-auto">
               <table className="w-full text-left text-sm">

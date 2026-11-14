@@ -7,7 +7,11 @@ function Toast({ mensaje }) {
   };
 
   return (
-    <div role="alert" className={`fixed bottom-5 right-5 z-[60] max-w-sm p-4 rounded-lg text-sm shadow-md ${estilos[mensaje.tipo] || estilos.success}`}>
+    <div
+      role={mensaje.tipo === "error" ? "alert" : "status"}
+      aria-live={mensaje.tipo === "error" ? "assertive" : "polite"}
+      className={`fixed bottom-5 right-5 z-[60] max-w-sm p-4 rounded-lg text-sm shadow-md ${estilos[mensaje.tipo] || estilos.success}`}
+    >
       {mensaje.texto}
     </div>
   );

@@ -19,7 +19,7 @@ function EdificiosPage({ edificios, cargando, error, onReintentar }) {
         <p className="mt-1 text-gray-600">Edificios registrados y disponibilidad de sus espacios.</p>
       </header>
       {edificios.length === 0 ? (
-        <p className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-600">No hay edificios registrados.</p>
+        <p role="status" className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-600">No hay edificios registrados.</p>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {edificios.map((edificio) => (
