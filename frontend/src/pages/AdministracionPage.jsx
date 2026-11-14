@@ -34,6 +34,8 @@ function AdministracionPage({
   const [edificioEditando, setEdificioEditando] = useState(null);
   const [espacioEditando, setEspacioEditando] = useState(null);
   const [errorAccion, setErrorAccion] = useState("");
+  const [exitoAccion, setExitoAccion] = useState("");
+  const [guardandoAccion, setGuardandoAccion] = useState(false);
 
   function iniciarEdicionEdificio(edificio) {
     setEdificioEditando(edificio.id);
@@ -60,19 +62,26 @@ function AdministracionPage({
   async function guardarEdificio(event) {
     event.preventDefault();
     setErrorAccion("");
+    setExitoAccion("");
+    setGuardandoAccion(true);
     try {
       if (edificioEditando) await onActualizarEdificio(edificioEditando, edificioForm);
       else await onCrearEdificio(edificioForm);
+      setExitoAccion(edificioEditando ? "Edificio actualizado correctamente." : "Edificio creado correctamente.");
       setEdificioForm(formularioEdificioVacio);
       setEdificioEditando(null);
     } catch (err) {
       setErrorAccion(err.message || "No se pudo guardar el edificio.");
+    } finally {
+      setGuardandoAccion(false);
     }
   }
 
   async function guardarEspacio(event) {
     event.preventDefault();
     setErrorAccion("");
+    setExitoAccion("");
+    setGuardandoAccion(true);
     const datos = {
       ...espacioForm,
       edificioId: Number(espacioForm.edificioId),
@@ -81,24 +90,32 @@ function AdministracionPage({
     try {
       if (espacioEditando) await onActualizarEspacio(espacioEditando, datos);
       else await onCrearEspacio(datos);
+      setExitoAccion(espacioEditando ? "Espacio actualizado correctamente." : "Espacio creado correctamente.");
       setEspacioForm(formularioEspacioVacio);
       setEspacioEditando(null);
     } catch (err) {
       setErrorAccion(err.message || "No se pudo guardar el espacio.");
+    } finally {
+      setGuardandoAccion(false);
     }
   }
 
-  async function ejecutarAccion(accion) {
+  async function ejecutarAccion(accion, mensajeExito) {
     setErrorAccion("");
+    setExitoAccion("");
+    setGuardandoAccion(true);
     try {
       await accion();
+      setExitoAccion(mensajeExito);
     } catch (err) {
       setErrorAccion(err.message || "No se pudo completar la operación.");
+    } finally {
+      setGuardandoAccion(false);
     }
   }
 
   if (cargando) {
-    return <p role="status" className="py-16 text-center text-gray-600">Cargando administración...</p>;
+    return <p role="status" aria-live="polite" className="py-16 text-center text-gray-600">Cargando administración...</p>;
   }
 
   if (error) {
@@ -117,6 +134,8 @@ function AdministracionPage({
         <p className="mt-1 text-gray-600">Crea, edita y desactiva recursos. La desactivación conserva su historial de reservas.</p>
       </header>
       {errorAccion && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{errorAccion}</p>}
+      {exitoAccion && <p role="status" aria-live="polite" className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">{exitoAccion}</p>}
+      {guardandoAccion && <p role="status" aria-live="polite" className="text-sm text-gray-600">Guardando cambios...</p>}
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
         <form onSubmit={guardarEdificio} className="space-y-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -138,14 +157,14 @@ function AdministracionPage({
             <textarea value={edificioForm.descripcion} onChange={(event) => setEdificioForm({ ...edificioForm, descripcion: event.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" rows={2} />
           </label>
           <div className="flex gap-2">
-            <button type="submit" className="rounded-lg bg-[#263762] px-4 py-2 font-medium text-white hover:bg-[#3B5597]">{edificioEditando ? "Guardar cambios" : "Crear edificio"}</button>
-            {edificioEditando && <button type="button" onClick={() => { setEdificioEditando(null); setEdificioForm(formularioEdificioVacio); }} className="rounded-lg border border-gray-300 px-4 py-2">Cancelar</button>}
+            <button type="submit" disabled={guardandoAccion} className="rounded-lg bg-[#263762] px-4 py-2 font-medium text-white hover:bg-[#3B5597] disabled:opacity-50">{guardandoAccion ? "Guardando..." : edificioEditando ? "Guardar cambios" : "Crear edificio"}</button>
+            {edificioEditando && <button type="button" disabled={guardandoAccion} onClick={() => { setEdificioEditando(null); setEdificioForm(formularioEdificioVacio); }} className="rounded-lg border border-gray-300 px-4 py-2 disabled:opacity-50">Cancelar</button>}
           </div>
         </form>
 
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-[#263762]">Edificios registrados</h2>
-          {edificios.length === 0 && <p className="rounded-xl border border-gray-200 bg-white p-5 text-gray-600">No hay edificios registrados.</p>}
+          {edificios.length === 0 && <p role="status" className="rounded-xl border border-gray-200 bg-white p-5 text-gray-600">No hay edificios registrados.</p>}
           {edificios.map((edificio) => (
             <article key={edificio.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4">
               <div>
@@ -154,8 +173,8 @@ function AdministracionPage({
                 <p className={`text-xs font-semibold ${edificio.activo ? "text-green-700" : "text-gray-500"}`}>{edificio.activo ? "Activo" : "Inactivo"}</p>
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={() => iniciarEdicionEdificio(edificio)} className="rounded-lg border border-gray-300 px-3 py-2 text-sm">Editar</button>
-                <button type="button" onClick={() => ejecutarAccion(() => onCambiarEstadoEdificio(edificio.id, !edificio.activo))} className="rounded-lg border border-gray-300 px-3 py-2 text-sm">{edificio.activo ? "Desactivar" : "Activar"}</button>
+                <button type="button" disabled={guardandoAccion} onClick={() => iniciarEdicionEdificio(edificio)} className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50">Editar</button>
+                <button type="button" disabled={guardandoAccion} onClick={() => ejecutarAccion(() => onCambiarEstadoEdificio(edificio.id, !edificio.activo), edificio.activo ? "Edificio desactivado." : "Edificio activado.")} className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50">{edificio.activo ? "Desactivar" : "Activar"}</button>
               </div>
             </article>
           ))}
@@ -195,14 +214,14 @@ function AdministracionPage({
             <textarea value={espacioForm.descripcion} onChange={(event) => setEspacioForm({ ...espacioForm, descripcion: event.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" rows={2} />
           </label>
           <div className="flex gap-2">
-            <button type="submit" disabled={!edificios.some((edificio) => edificio.activo)} className="rounded-lg bg-[#263762] px-4 py-2 font-medium text-white hover:bg-[#3B5597] disabled:opacity-50">{espacioEditando ? "Guardar cambios" : "Crear espacio"}</button>
-            {espacioEditando && <button type="button" onClick={() => { setEspacioEditando(null); setEspacioForm(formularioEspacioVacio); }} className="rounded-lg border border-gray-300 px-4 py-2">Cancelar</button>}
+            <button type="submit" disabled={guardandoAccion || !edificios.some((edificio) => edificio.activo)} className="rounded-lg bg-[#263762] px-4 py-2 font-medium text-white hover:bg-[#3B5597] disabled:opacity-50">{guardandoAccion ? "Guardando..." : espacioEditando ? "Guardar cambios" : "Crear espacio"}</button>
+            {espacioEditando && <button type="button" disabled={guardandoAccion} onClick={() => { setEspacioEditando(null); setEspacioForm(formularioEspacioVacio); }} className="rounded-lg border border-gray-300 px-4 py-2 disabled:opacity-50">Cancelar</button>}
           </div>
         </form>
 
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-[#263762]">Salas y laboratorios registrados</h2>
-          {espacios.length === 0 && <p className="rounded-xl border border-gray-200 bg-white p-5 text-gray-600">No hay espacios registrados.</p>}
+          {espacios.length === 0 && <p role="status" className="rounded-xl border border-gray-200 bg-white p-5 text-gray-600">No hay espacios registrados.</p>}
           {espacios.map((espacio) => (
             <article key={espacio.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4">
               <div>
@@ -211,8 +230,8 @@ function AdministracionPage({
                 <p className={`text-xs font-semibold ${espacio.disponible && espacio.edificio_activo ? "text-green-700" : "text-gray-500"}`}>{espacio.disponible && espacio.edificio_activo ? "Disponible" : "No disponible"}</p>
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={() => iniciarEdicionEspacio(espacio)} className="rounded-lg border border-gray-300 px-3 py-2 text-sm">Editar</button>
-                <button type="button" onClick={() => ejecutarAccion(() => onCambiarDisponibilidad(espacio.id, !espacio.disponible))} className="rounded-lg border border-gray-300 px-3 py-2 text-sm">{espacio.disponible ? "Desactivar" : "Activar"}</button>
+                <button type="button" disabled={guardandoAccion} onClick={() => iniciarEdicionEspacio(espacio)} className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50">Editar</button>
+                <button type="button" disabled={guardandoAccion} onClick={() => ejecutarAccion(() => onCambiarDisponibilidad(espacio.id, !espacio.disponible), espacio.disponible ? "Espacio desactivado." : "Espacio activado.")} className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50">{espacio.disponible ? "Desactivar" : "Activar"}</button>
               </div>
             </article>
           ))}
