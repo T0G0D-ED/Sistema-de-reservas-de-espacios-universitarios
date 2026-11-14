@@ -1,4 +1,6 @@
 import { useState } from "react";
+import DashboardPage from "./DashboardPage";
+import { useDashboard } from "../hooks/useDashboard";
 
 const formularioEdificioVacio = { nombre: "", codigo: "", ubicacion: "", descripcion: "" };
 const formularioEspacioVacio = {
@@ -36,6 +38,8 @@ function AdministracionPage({
   const [errorAccion, setErrorAccion] = useState("");
   const [exitoAccion, setExitoAccion] = useState("");
   const [guardandoAccion, setGuardandoAccion] = useState(false);
+  const [seccion, setSeccion] = useState("recursos");
+  const dashboard = useDashboard(seccion === "utilizacion");
 
   function iniciarEdicionEdificio(edificio) {
     setEdificioEditando(edificio.id);
@@ -114,29 +118,56 @@ function AdministracionPage({
     }
   }
 
-  if (cargando) {
-    return <p role="status" aria-live="polite" className="py-16 text-center text-gray-600">Cargando administración...</p>;
-  }
-
-  if (error) {
-    return (
-      <section role="alert" className="py-10 text-center bg-red-50 rounded-xl border border-red-200">
-        <p className="text-red-700">{error}</p>
-        <button type="button" onClick={onReintentar} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg">Reintentar</button>
-      </section>
-    );
-  }
-
   return (
-    <section className="space-y-10">
+    <section className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-[#263762]">Administración de edificios, salas y laboratorios</h1>
-        <p className="mt-1 text-gray-600">Crea, edita y desactiva recursos. La desactivación conserva su historial de reservas.</p>
+        <h1 className="text-2xl font-bold text-[#263762]">Administración</h1>
+        <p className="mt-1 text-gray-600">Gestiona los recursos y revisa su utilización.</p>
       </header>
+      <div role="group" aria-label="Secciones de administración" className="flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2">
+        <button
+          type="button"
+          aria-pressed={seccion === "recursos"}
+          onClick={() => setSeccion("recursos")}
+          className={seccion === "recursos"
+            ? "rounded-lg bg-[#263762] px-4 py-2 text-sm font-medium text-white"
+            : "rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"}
+        >
+          Gestión de recursos
+        </button>
+        <button
+          type="button"
+          aria-pressed={seccion === "utilizacion"}
+          onClick={() => setSeccion("utilizacion")}
+          className={seccion === "utilizacion"
+            ? "rounded-lg bg-[#263762] px-4 py-2 text-sm font-medium text-white"
+            : "rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"}
+        >
+          Utilización
+        </button>
+      </div>
+      {seccion === "utilizacion" ? (
+        <DashboardPage
+          datos={dashboard.datos}
+          cargando={dashboard.cargando}
+          error={dashboard.error}
+          onReintentar={dashboard.reintentar}
+        />
+      ) : cargando ? (
+        <p role="status" aria-live="polite" className="py-16 text-center text-gray-600">Cargando administración...</p>
+      ) : error ? (
+        <section role="alert" className="rounded-xl border border-red-200 bg-red-50 py-10 text-center">
+          <p className="text-red-700">{error}</p>
+          <button type="button" onClick={onReintentar} className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white">Reintentar</button>
+        </section>
+      ) : (
+      <>
       {errorAccion && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{errorAccion}</p>}
       {exitoAccion && <p role="status" aria-live="polite" className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">{exitoAccion}</p>}
       {guardandoAccion && <p role="status" aria-live="polite" className="text-sm text-gray-600">Guardando cambios...</p>}
 
+      <section className="space-y-10">
+      <p className="text-sm text-gray-600">Crea, edita y desactiva recursos. La desactivación conserva su historial de reservas.</p>
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
         <form onSubmit={guardarEdificio} className="space-y-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-[#263762]">{edificioEditando ? "Editar edificio" : "Agregar edificio"}</h2>
@@ -237,6 +268,9 @@ function AdministracionPage({
           ))}
         </div>
       </section>
+      </section>
+      </>
+      )}
     </section>
   );
 }

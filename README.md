@@ -42,6 +42,7 @@ Este Hito 3 conserva el catálogo de espacios del Taller 2, pero evoluciona la s
 - **Arquitectura de componentes:** [Ver imagen](docs/arquitectura.svg) *(fuente: `docs/arquitectura.puml`)*
 - **Flujo de creación de reserva:** [Ver imagen](docs/flujo-reserva.svg) *(fuente: `docs/flujo-reserva.puml`)*
 - **Modelo entidad-relación (SQL):** [Ver imagen](docs/modelo-er.svg) *(fuente: `docs/modelo-er.puml`)*
+- **Mapa de navegación (vistas y roles):** [Ver diagrama](docs/mapa-navegacion.md)
 
 ### Justificación del modelo NoSQL (MongoDB)
 
