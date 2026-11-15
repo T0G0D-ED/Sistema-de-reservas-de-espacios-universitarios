@@ -32,16 +32,16 @@ function ReservaCard({ reserva, nombreUsuario, usuarioId, rolUsuario, onCancelar
 
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex h-20 items-center justify-between bg-[#263762] px-5 text-white">
-        <span className="text-lg font-semibold">{reserva.espacio_tipo}</span>
-        <span className="rounded-full bg-white/20 px-2.5 py-1 text-xs font-medium backdrop-blur">
+      <div className="flex min-h-20 items-center justify-between gap-2 bg-[#263762] px-4 py-3 text-white sm:px-5">
+        <span className="min-w-0 break-words text-base font-semibold sm:text-lg">{reserva.espacio_tipo}</span>
+        <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-xs font-medium backdrop-blur">
           {etiquetasEstado[reserva.estado] || reserva.estado}
         </span>
       </div>
-      <div className="flex flex-1 flex-col p-5">
-        <h3 className="text-lg font-bold text-gray-900">{reserva.espacio_nombre}</h3>
-        <p className="mb-3 text-xs font-medium text-blue-600">{reserva.edificio_nombre}</p>
-        <div className="mb-4 flex-1 space-y-1 text-sm text-gray-600">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <h3 className="break-words text-lg font-bold text-gray-900">{reserva.espacio_nombre}</h3>
+        <p className="mb-3 break-words text-xs font-medium text-blue-600">{reserva.edificio_nombre}</p>
+        <div className="mb-4 flex-1 space-y-1 break-words text-sm text-gray-600">
           <p><strong>Fecha:</strong> {fecha}</p>
           <p><strong>Horario:</strong> {horario}</p>
           <p><strong>Solicitante:</strong> {solicitante}</p>
@@ -50,7 +50,7 @@ function ReservaCard({ reserva, nombreUsuario, usuarioId, rolUsuario, onCancelar
           {reserva.motivo_rechazo && <p><strong>Motivo de rechazo:</strong> {reserva.motivo_rechazo}</p>}
         </div>
         {esGestor && reserva.estado === "PENDIENTE" && (
-          <div className="mb-3 flex gap-2">
+          <div className="mb-3 flex flex-wrap gap-2 sm:flex-nowrap">
             <button type="button" onClick={() => onCambiarEstado(reserva.id, "APROBADA")} className="w-1/2 rounded-lg bg-green-600 py-2 text-sm font-semibold text-white hover:bg-green-700">
               Aprobar
             </button>
