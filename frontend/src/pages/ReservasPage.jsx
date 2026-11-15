@@ -32,14 +32,18 @@ function ReservasPage({
         <p className="mt-1 text-gray-600">
           {esGestor
             ? "Revisa las solicitudes y administra su estado."
-            : "Revisa el estado de tus solicitudes activas o cancela reservas registradas."}
+            : "Aquí aparecen tus solicitudes pendientes o aprobadas. Las canceladas o rechazadas están en Historial."}
         </p>
       </header>
       {reservas.length === 0 ? (
         <div role="status" className="rounded-xl border border-gray-200 bg-white py-16 text-center shadow-sm">
           <span className="mb-3 block text-5xl">📅</span>
-          <p className="text-lg font-semibold text-gray-700">{esGestor ? "No hay solicitudes registradas" : "No tienes reservas registradas"}</p>
-          <p className="mt-1 text-sm text-gray-500">Las solicitudes creadas aparecerán aquí.</p>
+          <p className="text-lg font-semibold text-gray-700">{esGestor ? "No hay solicitudes registradas" : "No tienes reservas activas"}</p>
+          <p className="mt-1 text-sm text-gray-500">
+            {esGestor
+              ? "Las solicitudes creadas aparecerán aquí."
+              : "Las solicitudes canceladas o rechazadas se conservan en Historial."}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

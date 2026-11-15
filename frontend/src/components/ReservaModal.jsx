@@ -36,12 +36,6 @@ function ReservaModal({ espacio, onClose, onConfirmar }) {
         if (!activo) return;
 
         setFeriados([...actual.feriados, ...siguiente.feriados]);
-
-        if (actual.fuente === "respaldo" || siguiente.fuente === "respaldo") {
-          setAvisoFeriados(
-            "El servicio de feriados no está disponible. Se está usando una lista de respaldo que puede no incluir feriados móviles; el servidor validará la fecha al enviar la solicitud."
-          );
-        }
       })
       .catch(() => {
         if (!activo) return;
