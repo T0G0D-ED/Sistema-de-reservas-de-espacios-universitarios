@@ -21,6 +21,7 @@ function formatoFecha(fecha) {
   return new Date(fecha).toLocaleString("es-CL", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "UTC",
   });
 }
 
