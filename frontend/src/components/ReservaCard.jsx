@@ -12,8 +12,8 @@ function ReservaCard({ reserva, nombreUsuario, usuarioId, rolUsuario, onCancelar
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const fechaInicio = new Date(reserva.fecha_inicio);
   const fechaFin = new Date(reserva.fecha_fin);
-  const fecha = fechaInicio.toLocaleDateString("es-CL");
-  const horario = `${fechaInicio.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })} - ${fechaFin.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}`;
+  const fecha = fechaInicio.toLocaleDateString("es-CL", { timeZone: "UTC" });
+  const horario = `${fechaInicio.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} - ${fechaFin.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })}`;
   const esGestor = rolUsuario === "ADMIN" || rolUsuario === "DOCENTE";
   const esPropietario = Number(reserva.usuario_id) === Number(usuarioId);
   const puedeCancelar = ["PENDIENTE", "APROBADA"].includes(reserva.estado)

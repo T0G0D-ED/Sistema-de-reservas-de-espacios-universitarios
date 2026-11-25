@@ -104,7 +104,9 @@ function HistorialScreen() {
                 #{reserva.id} · {reserva.espacio_nombre}
               </Text>
               <Text style={styles.muted}>
-                {new Date(reserva.fecha_inicio).toLocaleString("es-CL")}
+                {new Date(reserva.fecha_inicio).toLocaleString("es-CL", {
+                  timeZone: "UTC",
+                })}
               </Text>
             </Pressable>
           ))}

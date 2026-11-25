@@ -27,6 +27,12 @@ const meses = [
   "Diciembre",
 ];
 
+function formatearFechaLocal(fecha) {
+  const dosDigitos = (valor) => String(valor).padStart(2, "0");
+
+  return `${fecha.getFullYear()}-${dosDigitos(fecha.getMonth() + 1)}-${dosDigitos(fecha.getDate())}T${dosDigitos(fecha.getHours())}:${dosDigitos(fecha.getMinutes())}:00`;
+}
+
 function ReservaFormScreen({ espacio, onVolver, onConfirmar }) {
   const [dia, setDia] = useState("");
   const [mes, setMes] = useState("");
@@ -250,8 +256,9 @@ function ReservaFormScreen({ espacio, onVolver, onConfirmar }) {
     try {
       await onConfirmar({
         espacioId: espacio.id,
-        fechaInicio: inicio.toISOString(),
-        fechaFin: fin.toISOString(),
+        // La base usa TIMESTAMP sin zona horaria, igual que el formulario web.
+        fechaInicio: formatearFechaLocal(inicio),
+        fechaFin: formatearFechaLocal(fin),
         motivo: motivo.trim(),
       });
     } catch (err) {

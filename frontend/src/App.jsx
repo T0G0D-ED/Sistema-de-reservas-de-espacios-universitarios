@@ -26,6 +26,9 @@ function App() {
   const espacios = useEspacios();
   const edificios = useEdificios();
   const reservas = useReservas(auth.sesion);
+  const reservasVisibles = esGestor
+    ? reservas.reservas
+    : reservas.reservas.filter((reserva) => ["PENDIENTE", "APROBADA"].includes(reserva.estado));
   const historial = useHistorial(reservas.reservas, Boolean(auth.sesion?.token));
   const dashboard = useDashboard(esGestor && auth.sesion?.usuario.rol !== "ADMIN" && vista === "dashboard");
   const administracion = useAdministracion(auth.sesion?.usuario.rol === "ADMIN" && vista === "administracion");
@@ -103,7 +106,7 @@ function App() {
       <Header
         vista={vista}
         onCambiarVista={cambiarVista}
-        totalReservas={reservas.reservas.length}
+        totalReservas={reservasVisibles.length}
         usuario={auth.sesion?.usuario}
         esGestor={esGestor}
         onAbrirSesion={auth.abrirAuth}
@@ -144,7 +147,7 @@ function App() {
         )}
         {vista === "reservas" && (
           <ReservasPage
-            reservas={reservas.reservas}
+            reservas={reservasVisibles}
             cargando={reservas.cargando}
             error={auth.sesion ? reservas.error : "Inicia sesión para consultar solicitudes."}
             esGestor={esGestor}

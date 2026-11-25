@@ -18,15 +18,21 @@ import ReservaFormScreen from "./src/screens/ReservaFormScreen";
 import HistorialScreen from "./src/screens/HistorialScreen";
 import UtilizacionScreen from "./src/screens/UtilizacionScreen";
 import AdministracionScreen from "./src/screens/AdministracionScreen";
-import { iniciarSesion as iniciarSesionService } from "./src/services/authService";
-import { setAuthToken } from "./src/services/api";
+import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { listarEspacios } from "./src/services/espaciosService";
 import { crearReserva } from "./src/services/reservasService";
 
-export default function App() {
-  const [usuario, setUsuario] = useState(null);
-  const [iniciandoSesion, setIniciandoSesion] = useState(false);
-  const [errorSesion, setErrorSesion] = useState("");
+function MainApp() {
+  // 1. Se enchufa al AuthContext en lugar de manejar estados de sesion locales
+  const {
+    usuario,
+    cargandoAuth,
+    iniciandoSesion,
+    errorSesion,
+    autenticar,
+    cerrarSesion,
+  } = useAuth();
+
   const [espacios, setEspacios] = useState([]);
   const [cargandoEspacios, setCargandoEspacios] = useState(false);
   const [errorEspacios, setErrorEspacios] = useState("");
@@ -38,25 +44,15 @@ export default function App() {
   const menuRef = useRef(null);
   const menuMedidas = useRef({ ancho: 0, contenido: 0, desplazamiento: 0 });
 
-  const autenticar = useCallback(async ({ identificador, password }) => {
-    setIniciandoSesion(true);
-    setErrorSesion("");
-    try {
-      const session = await iniciarSesionService(identificador, password);
-      if (!session?.token || !session.usuario) {
-        throw new Error("La respuesta de inicio de sesión no es válida.");
+  const manejarLogin = useCallback(
+    async (credenciales) => {
+      const ok = await autenticar(credenciales);
+      if (ok) {
+        setVista("espacios");
       }
-      setAuthToken(session.token);
-      setUsuario(session.usuario);
-      setVista("espacios");
-    } catch (err) {
-      setErrorSesion(
-        err instanceof Error ? err.message : "No se pudo iniciar sesión.",
-      );
-    } finally {
-      setIniciandoSesion(false);
-    }
-  }, []);
+    },
+    [autenticar]
+  );
 
   const cargarEspacios = useCallback(async () => {
     setCargandoEspacios(true);
@@ -76,31 +72,39 @@ export default function App() {
     }
   }, [usuario, vista, espacioSeleccionado, cargarEspacios]);
 
-  function cerrarSesion() {
-    setAuthToken(null);
-    setUsuario(null);
-    setEspacios([]);
-    setErrorEspacios("");
-    setErrorSesion("");
-    setEspacioSeleccionado(null);
-    setVista("espacios");
-  }
-
-  async function confirmarReserva(datos) {
-    await crearReserva(datos);
-    setEspacioSeleccionado(null);
-    setVista("reservas");
-  }
+  // 2. Limpia las listas en pantalla automáticamente cuando se cierra sesión o expira el token (401)
+  useEffect(() => {
+    if (!usuario) {
+      setEspacios([]);
+      setErrorEspacios("");
+      setEspacioSeleccionado(null);
+      setVista("espacios");
+    }
+  }, [usuario]);
 
   function actualizarFlechasMenu(desplazamiento, ancho, contenido) {
     setMostrarFlechaIzquierdaMenu(desplazamiento > 1);
     setMostrarFlechaMenu(desplazamiento + ancho < contenido - 1);
   }
 
+  // 3. Telon de carga mientras AsyncStorage verifica si habia una sesion abierta
+  if (cargandoAuth) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F3F6FB" />
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color="#1746A2" />
+          <Text style={styles.loadingText}>Verificando sesión...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // 4. Ruta protegida: si no hay sesion activa, bloquea el acceso y muestra Login
   if (!usuario) {
     return (
       <LoginScreen
-        onIniciarSesion={autenticar}
+        onIniciarSesion={manejarLogin}
         cargando={iniciandoSesion}
         error={errorSesion}
       />
@@ -120,6 +124,12 @@ export default function App() {
       ? [{ id: "utilizacion", etiqueta: "Utilización" }]
       : []),
   ];
+
+  async function confirmarReserva(datos) {
+    await crearReserva(datos);
+    setEspacioSeleccionado(null);
+    setVista("reservas");
+  }
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -161,7 +171,7 @@ export default function App() {
             actualizarFlechasMenu(
               menuMedidas.current.desplazamiento,
               nativeEvent.layout.width,
-              menuMedidas.current.contenido,
+              menuMedidas.current.contenido
             );
           }}
           onContentSizeChange={(width) => {
@@ -169,7 +179,7 @@ export default function App() {
             actualizarFlechasMenu(
               menuMedidas.current.desplazamiento,
               menuMedidas.current.ancho,
-              width,
+              width
             );
           }}
           onScroll={({ nativeEvent }) => {
@@ -178,7 +188,7 @@ export default function App() {
             actualizarFlechasMenu(
               contentOffset.x,
               layoutMeasurement.width,
-              contentSize.width,
+              contentSize.width
             );
           }}
           scrollEventThrottle={16}
@@ -274,6 +284,15 @@ export default function App() {
         ) : null}
       </View>
     </SafeAreaView>
+  );
+}
+
+// 5. Proveedor global que envuelve toda la aplicacion
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   );
 }
 

@@ -54,6 +54,8 @@ export function useReservas(sesion) {
     const [horaInicio, horaFin] = datos.hora.split(" - ");
     const fechaInicio = `${datos.fecha}T${horaInicio}:00`;
     const fechaFin = `${datos.fecha}T${horaFin}:00`;
+
+
     const reserva = await crearReservaService({
       espacioId: espacio.id,
       fechaInicio,
