@@ -11,6 +11,7 @@ function crearServicio({ conflicto = null, reserva = null, diaHabil = true } = {
     crear: 0,
     actualizarEstado: [],
     eventos: [],
+    listarDisponibilidad: [],
   };
 
   const reservaActual = reserva ?? {
@@ -48,6 +49,10 @@ function crearServicio({ conflicto = null, reserva = null, diaHabil = true } = {
     async listarTodas() {
       return [];
     },
+    async listarDisponibilidad(...datos) {
+      llamadas.listarDisponibilidad.push(datos);
+      return [{ fecha_inicio: fechaInicio, fecha_fin: fechaFin }];
+    },
   };
 
   const auditModel = {
@@ -71,6 +76,24 @@ function crearServicio({ conflicto = null, reserva = null, diaHabil = true } = {
 
   return { service, llamadas };
 }
+
+test("consulta los intervalos ocupados del espacio y rango solicitados", async () => {
+  const { service, llamadas } = crearServicio();
+  const rangoInicio = "2026-11-16T03:00:00.000Z";
+  const rangoFin = "2026-11-17T03:00:00.000Z";
+
+  const disponibilidad = await service.obtenerDisponibilidad(
+    3,
+    rangoInicio,
+    rangoFin,
+  );
+
+  assert.deepEqual(llamadas.listarDisponibilidad, [[3, rangoInicio, rangoFin]]);
+  assert.deepEqual(disponibilidad, [{
+    fecha_inicio: fechaInicio,
+    fecha_fin: fechaFin,
+  }]);
+});
 
 test("rechaza una reserva si la hora de término no es posterior", async () => {
   const { service, llamadas } = crearServicio();

@@ -125,6 +125,17 @@ function EdificiosScreen() {
                               {espacio.tipo.replace("_", " ")} ·{" "}
                               {espacio.capacidad} personas
                             </Text>
+                            {Array.isArray(espacio.equipamiento) &&
+                            espacio.equipamiento.length > 0 ? (
+                              <Text style={styles.muted}>
+                                Equipamiento:{" "}
+                                {espacio.equipamiento
+                                  .map(({ nombre, cantidad }) =>
+                                    cantidad > 1 ? `${nombre} (${cantidad})` : nombre,
+                                  )
+                                  .join(", ")}
+                              </Text>
+                            ) : null}
                           </View>
                           <Text style={[styles.status, estado.estilo]}>
                             {estado.texto}

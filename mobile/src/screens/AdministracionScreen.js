@@ -29,6 +29,7 @@ const espacioVacio = {
   capacidad: "30",
   ubicacion: "",
   descripcion: "",
+  equipamiento: [],
 };
 const tipos = [
   ["SALA", "Sala"],
@@ -64,6 +65,8 @@ function AdministracionScreen() {
   const [espacioForm, setEspacioForm] = useState(espacioVacio);
   const [seccion, setSeccion] = useState("recursos");
   const [guardando, setGuardando] = useState(false);
+  const [edificiosExpandido, setEdificiosExpandido] = useState(false);
+  const [espaciosExpandido, setEspaciosExpandido] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -114,6 +117,10 @@ function AdministracionScreen() {
             capacidad: String(espacio.capacidad),
             ubicacion: espacio.ubicacion || "",
             descripcion: espacio.descripcion || "",
+            equipamiento: (espacio.equipamiento || []).map((item) => ({
+              ...item,
+              cantidad: String(item.cantidad),
+            })),
           }
         : espacioVacio,
     );
@@ -133,6 +140,10 @@ function AdministracionScreen() {
           ...espacioForm,
           edificioId: Number(espacioForm.edificioId),
           capacidad: Number(espacioForm.capacidad),
+          equipamiento: espacioForm.equipamiento.map((item) => ({
+            ...item,
+            cantidad: Number(item.cantidad),
+          })),
         };
         if (modal.id) await actualizarEspacio(modal.id, datos);
         else await crearEspacio(datos);
@@ -189,12 +200,25 @@ function AdministracionScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
           {mensaje ? <Text style={styles.success}>{mensaje}</Text> : null}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Edificios</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: edificiosExpandido }}
+              onPress={() => setEdificiosExpandido((expandido) => !expandido)}
+              style={styles.sectionToggle}
+            >
+              <Text style={styles.sectionTitle}>Edificios</Text>
+              <Text style={styles.sectionArrow}>
+                {edificiosExpandido ? "▴" : "▾"}
+              </Text>
+            </Pressable>
             <Pressable onPress={() => abrirEdificio()} style={styles.addButton}>
               <Text style={styles.addText}>+ Agregar</Text>
             </Pressable>
           </View>
-          {edificios.map((edificio) => (
+          {edificiosExpandido && edificios.length === 0 ? (
+            <Text style={styles.emptyMessage}>No hay edificios registrados.</Text>
+          ) : null}
+          {edificiosExpandido && edificios.map((edificio) => (
             <View key={edificio.id} style={styles.card}>
               <Text style={styles.cardTitle}>
                 {edificio.nombre} ({edificio.codigo})
@@ -227,7 +251,17 @@ function AdministracionScreen() {
           ))}
 
           <View style={[styles.sectionHeader, styles.spaceHeader]}>
-            <Text style={styles.sectionTitle}>Espacios</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: espaciosExpandido }}
+              onPress={() => setEspaciosExpandido((expandido) => !expandido)}
+              style={styles.sectionToggle}
+            >
+              <Text style={styles.sectionTitle}>Espacios</Text>
+              <Text style={styles.sectionArrow}>
+                {espaciosExpandido ? "▴" : "▾"}
+              </Text>
+            </Pressable>
             <Pressable
               disabled={!edificios.some((edificio) => edificio.activo)}
               onPress={() => abrirEspacio()}
@@ -239,7 +273,10 @@ function AdministracionScreen() {
               <Text style={styles.addText}>+ Agregar</Text>
             </Pressable>
           </View>
-          {espacios.map((espacio) => (
+          {espaciosExpandido && espacios.length === 0 ? (
+            <Text style={styles.emptyMessage}>No hay espacios registrados.</Text>
+          ) : null}
+          {espaciosExpandido && espacios.map((espacio) => (
             <View key={espacio.id} style={styles.card}>
               <Text style={styles.cardTitle}>{espacio.nombre}</Text>
               <Text style={styles.detail}>
@@ -383,6 +420,78 @@ function AdministracionScreen() {
                   onChangeText={(descripcion) => setEspacioForm({ ...espacioForm, descripcion })}
                   multiline
                 />
+                <Text style={styles.label}>Equipamiento</Text>
+                {espacioForm.equipamiento.map((item, index) => (
+                  <View
+                    key={item.id ? `equipamiento-${item.id}` : `equipamiento-nuevo-${index}`}
+                    style={styles.equipmentCard}
+                  >
+                    <View style={styles.equipmentHeader}>
+                      <Text style={styles.equipmentTitle}>Elemento {index + 1}</Text>
+                      <Pressable
+                        onPress={() =>
+                          setEspacioForm((form) => ({
+                            ...form,
+                            equipamiento: form.equipamiento.filter((_, itemIndex) => itemIndex !== index),
+                          }))
+                        }
+                      >
+                        <Text style={styles.removeEquipment}>Quitar</Text>
+                      </Pressable>
+                    </View>
+                    <Campo
+                      label="Nombre"
+                      value={item.nombre}
+                      onChangeText={(nombre) =>
+                        setEspacioForm((form) => ({
+                          ...form,
+                          equipamiento: form.equipamiento.map((equipo, itemIndex) =>
+                            itemIndex === index ? { ...equipo, nombre } : equipo,
+                          ),
+                        }))
+                      }
+                    />
+                    <Campo
+                      label="Tipo"
+                      value={item.tipo}
+                      onChangeText={(tipo) =>
+                        setEspacioForm((form) => ({
+                          ...form,
+                          equipamiento: form.equipamiento.map((equipo, itemIndex) =>
+                            itemIndex === index ? { ...equipo, tipo } : equipo,
+                          ),
+                        }))
+                      }
+                    />
+                    <Campo
+                      label="Cantidad"
+                      value={item.cantidad}
+                      onChangeText={(cantidad) =>
+                        setEspacioForm((form) => ({
+                          ...form,
+                          equipamiento: form.equipamiento.map((equipo, itemIndex) =>
+                            itemIndex === index ? { ...equipo, cantidad } : equipo,
+                          ),
+                        }))
+                      }
+                      keyboardType="numeric"
+                    />
+                  </View>
+                ))}
+                <Pressable
+                  onPress={() =>
+                    setEspacioForm((form) => ({
+                      ...form,
+                      equipamiento: [
+                        ...form.equipamiento,
+                        { nombre: "", tipo: "", cantidad: "1" },
+                      ],
+                    }))
+                  }
+                  style={styles.equipmentAdd}
+                >
+                  <Text style={styles.equipmentAddText}>+ Agregar equipamiento</Text>
+                </Pressable>
               </>
             )}
             {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -432,10 +541,13 @@ const styles = StyleSheet.create({
   content: { padding: 18, paddingTop: 0, paddingBottom: 30 },
   loader: { marginTop: 40 },
   sectionHeader: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
+  sectionToggle: { alignItems: "center", flexDirection: "row", gap: 8, paddingVertical: 5 },
   sectionTitle: { color: "#14213D", fontSize: 18, fontWeight: "700" },
+  sectionArrow: { color: "#1746A2", fontSize: 18, fontWeight: "700" },
   spaceHeader: { marginTop: 20 },
   addButton: { backgroundColor: "#1746A2", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 9 },
   addText: { color: "#FFFFFF", fontSize: 13, fontWeight: "600" },
+  emptyMessage: { color: "#586579", fontSize: 13, marginBottom: 8 },
   card: { backgroundColor: "#FFFFFF", borderColor: "#E1E7F0", borderRadius: 12, borderWidth: 1, marginBottom: 9, padding: 14 },
   cardTitle: { color: "#14213D", fontWeight: "700" },
   detail: { color: "#586579", fontSize: 13, marginTop: 5 },
@@ -457,6 +569,12 @@ const styles = StyleSheet.create({
   typeChoiceTextSelected: { color: "#FFFFFF", fontWeight: "600" },
   buildingChoice: { borderColor: "#CBD4E2", borderRadius: 8, borderWidth: 1, marginTop: 7, padding: 11 },
   buildingChoiceSelected: { borderColor: "#1746A2", backgroundColor: "#EEF3FC" },
+  equipmentCard: { backgroundColor: "#F7F9FC", borderColor: "#E1E7F0", borderRadius: 9, borderWidth: 1, marginTop: 10, padding: 11 },
+  equipmentHeader: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
+  equipmentTitle: { color: "#14213D", fontSize: 14, fontWeight: "700" },
+  removeEquipment: { color: "#B42318", fontSize: 13, fontWeight: "600", padding: 4 },
+  equipmentAdd: { alignItems: "center", borderColor: "#1746A2", borderRadius: 8, borderWidth: 1, marginTop: 10, padding: 11 },
+  equipmentAddText: { color: "#1746A2", fontSize: 13, fontWeight: "700" },
   saveButton: { alignItems: "center", backgroundColor: "#1746A2", borderRadius: 9, justifyContent: "center", marginTop: 20, minHeight: 48 },
   saveText: { color: "#FFFFFF", fontWeight: "700" },
   cancelButton: { alignItems: "center", borderColor: "#CBD4E2", borderRadius: 9, borderWidth: 1, marginTop: 9, padding: 12 },

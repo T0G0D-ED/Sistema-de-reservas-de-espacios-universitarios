@@ -7,7 +7,23 @@ const router = Router();
 router.get('/', async (req, res, next) => {
   try {
     const query = `
-      SELECT e.*, b.nombre AS edificio_nombre, b.codigo AS edificio_codigo
+      SELECT e.*, b.nombre AS edificio_nombre, b.codigo AS edificio_codigo,
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object(
+                'id', eq.id,
+                'nombre', eq.nombre,
+                'tipo', eq.tipo,
+                'cantidad', eq.cantidad
+              )
+              ORDER BY eq.nombre
+            )
+            FROM equipamiento eq
+            WHERE eq.espacio_id = e.id
+          ),
+          '[]'::json
+        ) AS equipamiento
       FROM espacios e
       JOIN edificios b ON b.id = e.edificio_id
       WHERE e.disponible = true AND b.activo = true

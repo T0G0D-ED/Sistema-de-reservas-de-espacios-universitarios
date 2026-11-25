@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { listarDisponibilidad } from "../services/reservasService";
 
 const horas = Array.from({ length: 10 }, (_, index) => index + 8);
 const meses = [
@@ -41,64 +42,163 @@ function ReservaFormScreen({ espacio, onVolver, onConfirmar }) {
   const [motivo, setMotivo] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
+  const [horariosOcupados, setHorariosOcupados] = useState([]);
+  const [cargandoDisponibilidad, setCargandoDisponibilidad] = useState(false);
+  const [errorDisponibilidad, setErrorDisponibilidad] = useState("");
+  const [fechaConsultada, setFechaConsultada] = useState(null);
+  const [intentoDisponibilidad, setIntentoDisponibilidad] = useState(0);
   const mesNumero = Number(mes);
   const anioNumero = Number(anio) || new Date().getFullYear();
   const anioActual = new Date().getFullYear();
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
-  const mesParaDias =
-    mesNumero >= 1 && mesNumero <= 12 ? mesNumero : hoy.getMonth() + 1;
   const cantidadDias =
     mesNumero >= 1 && mesNumero <= 12
       ? new Date(anioNumero, mesNumero, 0).getDate()
       : 31;
-  const diasDisponibles = Array.from({ length: cantidadDias }, (_, index) => {
-    const numero = index + 1;
-    return anioNumero > hoy.getFullYear() ||
-      (anioNumero === hoy.getFullYear() &&
-        (mesParaDias > hoy.getMonth() + 1 ||
-          (mesParaDias === hoy.getMonth() + 1 && numero >= hoy.getDate())));
-  })
-    .map((disponible, index) => (disponible ? index + 1 : null))
-    .filter((numero) => numero !== null);
-  const mesesDisponibles = meses
-    .map((nombre, index) => ({ nombre, numero: index + 1 }))
-    .filter(
-      ({ numero }) =>
-        anioNumero > anioActual ||
-        (anioNumero === anioActual && numero >= new Date().getMonth() + 1),
-    );
+  const diasDisponibles = Array.from(
+    { length: cantidadDias },
+    (_, index) => index + 1,
+  );
+  const mesesDisponibles = meses.map((nombre, index) => ({
+    nombre,
+    numero: index + 1,
+  }));
   const aniosDisponibles = [anioActual, anioActual + 1];
   const fechaFormateada =
     dia && mes && anio
       ? `${dia.padStart(2, "0")}-${mes.padStart(2, "0")}-${anio}`
       : "";
+  const diaNumeroSeleccionado = Number(dia);
+  const anioSeleccionado = Number(anio);
+  const fechaCompleta =
+    /^\d{1,2}$/.test(dia) &&
+    /^\d{1,2}$/.test(mes) &&
+    /^\d{4}$/.test(anio);
+  const fechaSeleccionada =
+    fechaCompleta
+      ? new Date(anioSeleccionado, mesNumero - 1, diaNumeroSeleccionado)
+      : null;
+  const fechaCalendarioValida =
+    fechaSeleccionada &&
+    fechaSeleccionada.getFullYear() === anioSeleccionado &&
+    fechaSeleccionada.getMonth() === mesNumero - 1 &&
+    fechaSeleccionada.getDate() === diaNumeroSeleccionado;
+  let fechaError = "";
+  if (fechaCompleta) {
+    if (mesNumero < 1 || mesNumero > 12) {
+      fechaError = "Ingresa un mes entre 01 y 12.";
+    } else if (diaNumeroSeleccionado < 1 || diaNumeroSeleccionado > 31) {
+      fechaError = "Ingresa un día entre 01 y 31.";
+    } else if (!fechaCalendarioValida) {
+      fechaError = `El ${diaNumeroSeleccionado} de ${meses[
+        mesNumero - 1
+      ].toLowerCase()} de ${anio} no existe. Revisa la fecha.`;
+    } else if (fechaSeleccionada < hoy) {
+      fechaError = "La fecha seleccionada ya pasó. Elige una fecha futura.";
+    }
+  }
+  const fechaValida = Boolean(fechaCalendarioValida) && !fechaError;
+  const claveFecha = fechaValida
+    ? `${anioSeleccionado}-${String(mesNumero).padStart(2, "0")}-${String(
+        diaNumeroSeleccionado,
+      ).padStart(2, "0")}`
+    : null;
+
+  useEffect(() => {
+    if (!claveFecha) {
+      setHora(null);
+      setHorariosOcupados([]);
+      setFechaConsultada(null);
+      setErrorDisponibilidad("");
+      setCargandoDisponibilidad(false);
+      return undefined;
+    }
+
+    let vigente = true;
+    const inicioDia = new Date(
+      anioNumero,
+      mesNumero - 1,
+      diaNumeroSeleccionado,
+    );
+    const finDia = new Date(
+      anioNumero,
+      mesNumero - 1,
+      diaNumeroSeleccionado + 1,
+    );
+
+    setHora(null);
+    setHorariosOcupados([]);
+    setFechaConsultada(null);
+    setErrorDisponibilidad("");
+    setCargandoDisponibilidad(true);
+
+    listarDisponibilidad(
+      espacio.id,
+      inicioDia.toISOString(),
+      finDia.toISOString(),
+    )
+      .then((horarios) => {
+        if (vigente) {
+          setHorariosOcupados(horarios);
+          setFechaConsultada(claveFecha);
+        }
+      })
+      .catch((err) => {
+        if (vigente) {
+          setErrorDisponibilidad(
+            err.message || "No se pudo consultar la disponibilidad.",
+          );
+        }
+      })
+      .finally(() => {
+        if (vigente) setCargandoDisponibilidad(false);
+      });
+
+    return () => {
+      vigente = false;
+    };
+  }, [
+    anioNumero,
+    claveFecha,
+    diaNumeroSeleccionado,
+    intentoDisponibilidad,
+    mesNumero,
+    espacio.id,
+  ]);
+
+  function horarioOcupado(horaInicio) {
+    if (!claveFecha || fechaConsultada !== claveFecha) return false;
+    const inicio = new Date(
+      anioNumero,
+      mesNumero - 1,
+      diaNumeroSeleccionado,
+      horaInicio,
+    );
+    const fin = new Date(inicio.getTime() + 60 * 60 * 1000);
+    return horariosOcupados.some(
+      (reserva) =>
+        new Date(reserva.fecha_inicio) < fin &&
+        new Date(reserva.fecha_fin) > inicio,
+    );
+  }
+
+  const disponibilidadLista =
+    Boolean(claveFecha) &&
+    fechaConsultada === claveFecha &&
+    !cargandoDisponibilidad &&
+    !errorDisponibilidad;
 
   function seleccionarMes(numero) {
     setMes(numero);
-    const fechaActualizada = new Date(anioNumero, Number(numero) - 1, Number(dia));
-    if (
-      dia &&
-      (Number(dia) > new Date(anioNumero, Number(numero), 0).getDate() ||
-        fechaActualizada < hoy)
-    ) {
-      setDia("");
-    }
+    setHora(null);
     setSelectorFecha(null);
     setError("");
   }
 
   function seleccionarAnio(valor) {
     setAnio(String(valor));
-    if (
-      Number(dia) &&
-      Number(mes) &&
-      (Number(dia) > new Date(valor, mesNumero, 0).getDate() ||
-        new Date(valor, mesNumero - 1, Number(dia)) < hoy)
-    ) {
-      setMes("");
-      setDia("");
-    }
+    setHora(null);
     setSelectorFecha(null);
     setError("");
   }
@@ -113,8 +213,21 @@ function ReservaFormScreen({ espacio, onVolver, onConfirmar }) {
       setError("Completa el día, mes y año con formato DD-MM-AAAA.");
       return;
     }
+    if (fechaError) {
+      setError(fechaError);
+      return;
+    }
     if (hora === null) {
       setError("Selecciona un horario.");
+      return;
+    }
+    if (!disponibilidadLista) {
+      setError("Espera a que se consulte la disponibilidad de la sala.");
+      return;
+    }
+    if (horarioOcupado(hora)) {
+      setHora(null);
+      setError("Ese horario ya está ocupado. Selecciona otro.");
       return;
     }
     if (!motivo.trim()) {
@@ -133,19 +246,6 @@ function ReservaFormScreen({ espacio, onVolver, onConfirmar }) {
       0,
       0,
     );
-    if (
-      inicio.getFullYear() !== anioSeleccionado ||
-      inicio.getMonth() !== mesSeleccionado - 1 ||
-      inicio.getDate() !== diaNumero
-    ) {
-      setError("La fecha ingresada no existe.");
-      return;
-    }
-    const fechaCalendario = new Date(anioSeleccionado, mesSeleccionado - 1, diaNumero);
-    if (fechaCalendario < hoy) {
-      setError("No puedes reservar una fecha pasada.");
-      return;
-    }
     const fin = new Date(inicio.getTime() + 60 * 60 * 1000);
     if (inicio <= new Date()) {
       setError("Elige una fecha y hora futuras.");
@@ -231,7 +331,15 @@ function ReservaFormScreen({ espacio, onVolver, onConfirmar }) {
             <View style={[styles.dateField, styles.yearField]}>
               <Text style={styles.dateLabel}>Año</Text>
               <View style={styles.dateInputGroup}>
-                <Text style={styles.yearText}>{anio || "AAAA"}</Text>
+                <TextInput
+                  accessibilityLabel="Año"
+                  keyboardType="number-pad"
+                  maxLength={4}
+                  onChangeText={(value) => setAnio(value.replace(/\D/g, ""))}
+                  placeholder="AAAA"
+                  value={anio}
+                  style={styles.yearText}
+                />
                 <Pressable
                   accessibilityLabel="Seleccionar año"
                   onPress={() => setSelectorFecha("anio")}
@@ -247,25 +355,86 @@ function ReservaFormScreen({ espacio, onVolver, onConfirmar }) {
               Fecha seleccionada: {fechaFormateada}
             </Text>
           ) : null}
+          {fechaError ? (
+            <Text accessibilityLiveRegion="polite" style={styles.dateError}>
+              {fechaError}
+            </Text>
+          ) : null}
 
-          <Text style={styles.label}>Horario disponible</Text>
-          <View style={styles.hours}>
-            {horas.map((value) => (
+          <Text style={styles.label}>Horario</Text>
+          {!claveFecha ? (
+            <Text style={styles.availabilityMessage}>
+              {fechaError
+                ? "Corrige la fecha para consultar los horarios."
+                : "Selecciona una fecha válida para consultar los horarios."}
+            </Text>
+          ) : cargandoDisponibilidad ? (
+            <View style={styles.availabilityStatus}>
+              <ActivityIndicator size="small" color="#1746A2" />
+              <Text style={styles.availabilityMessage}>
+                Consultando horarios ocupados...
+              </Text>
+            </View>
+          ) : errorDisponibilidad ? (
+            <View style={styles.availabilityError}>
+              <Text style={styles.availabilityErrorText}>
+                No se pudo consultar la disponibilidad. {errorDisponibilidad}
+              </Text>
               <Pressable
-                key={value}
-                onPress={() => setHora(value)}
-                style={[styles.hour, hora === value && styles.hourSelected]}
+                onPress={() =>
+                  setIntentoDisponibilidad((intento) => intento + 1)
+                }
+                style={styles.retryAvailability}
               >
-                <Text
-                  style={[
-                    styles.hourText,
-                    hora === value && styles.hourTextSelected,
-                  ]}
-                >
-                  {String(value).padStart(2, "0")}:00
+                <Text style={styles.retryAvailabilityText}>
+                  Reintentar consulta
                 </Text>
               </Pressable>
-            ))}
+            </View>
+          ) : (
+            <Text style={styles.availabilityMessage}>
+              Los horarios disponibles aparecen en verde y los ocupados en
+              rojo.
+            </Text>
+          )}
+          <View style={styles.hours}>
+            {horas.map((value) => {
+              const ocupado = horarioOcupado(value);
+              return (
+                <Pressable
+                  key={value}
+                  accessibilityState={{
+                    disabled: !disponibilidadLista || ocupado,
+                    selected: hora === value,
+                  }}
+                  disabled={!disponibilidadLista || ocupado}
+                  onPress={() => setHora(value)}
+                  style={[
+                    styles.hour,
+                    !disponibilidadLista && styles.hourDisabled,
+                    disponibilidadLista &&
+                      !ocupado &&
+                      styles.hourAvailable,
+                    ocupado && styles.hourUnavailable,
+                    hora === value && styles.hourSelected,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.hourText,
+                      !disponibilidadLista && styles.hourDisabledText,
+                      disponibilidadLista &&
+                        !ocupado &&
+                        styles.hourAvailableText,
+                      ocupado && styles.hourUnavailableText,
+                      hora === value && styles.hourTextSelected,
+                    ]}
+                  >
+                    {String(value).padStart(2, "0")}:00
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
           {hora !== null ? (
             <Text style={styles.selectedTime}>
@@ -329,28 +498,22 @@ function ReservaFormScreen({ espacio, onVolver, onConfirmar }) {
             </View>
             <ScrollView style={styles.pickerOptions}>
               {selectorFecha === "dia" ? (
-                diasDisponibles.length > 0 ? (
-                  diasDisponibles.map((valor) => {
-                    const numero = String(valor).padStart(2, "0");
-                    return (
-                      <Pressable
-                        key={numero}
-                        onPress={() => {
-                          setDia(numero);
-                          setSelectorFecha(null);
-                          setError("");
-                        }}
-                        style={styles.pickerOption}
-                      >
-                        <Text style={styles.pickerOptionText}>{numero}</Text>
-                      </Pressable>
-                    );
-                  })
-                ) : (
-                  <Text style={styles.pickerEmpty}>
-                    No hay días futuros en este mes.
-                  </Text>
-                )
+                diasDisponibles.map((valor) => {
+                  const numero = String(valor).padStart(2, "0");
+                  return (
+                    <Pressable
+                      key={numero}
+                      onPress={() => {
+                        setDia(numero);
+                        setSelectorFecha(null);
+                        setError("");
+                      }}
+                      style={styles.pickerOption}
+                    >
+                      <Text style={styles.pickerOptionText}>{numero}</Text>
+                    </Pressable>
+                  );
+                })
               ) : selectorFecha === "mes" ? (
                 mesesDisponibles.map(({ nombre, numero: valor }) => {
                   const numero = String(valor).padStart(2, "0");
@@ -425,8 +588,8 @@ const styles = StyleSheet.create({
   arrowButton: { alignItems: "center", justifyContent: "center", minHeight: 44, width: 27 },
   arrow: { color: "#1746A2", fontSize: 18, fontWeight: "700" },
   yearText: { color: "#14213D", flex: 1, fontSize: 16, paddingHorizontal: 10, textAlign: "center" },
-  pickerEmpty: { color: "#586579", fontSize: 15, padding: 18, textAlign: "center" },
   datePreview: { color: "#1746A2", fontSize: 13, fontWeight: "600", marginTop: 8 },
+  dateError: { color: "#B42318", fontSize: 13, marginTop: 6 },
   input: {
     borderColor: "#CBD4E2",
     borderRadius: 10,
@@ -438,6 +601,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   hours: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 9 },
+  availabilityStatus: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
+  },
+  availabilityMessage: { color: "#586579", fontSize: 13, marginTop: 8 },
+  availabilityError: {
+    backgroundColor: "#FEF2F2",
+    borderRadius: 9,
+    marginTop: 8,
+    padding: 10,
+  },
+  availabilityErrorText: { color: "#B42318", fontSize: 13 },
+  retryAvailability: {
+    alignSelf: "flex-start",
+    marginTop: 8,
+    paddingVertical: 4,
+  },
+  retryAvailabilityText: { color: "#1746A2", fontSize: 14, fontWeight: "700" },
   hour: {
     borderColor: "#CBD4E2",
     borderRadius: 9,
@@ -446,7 +629,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
-  hourSelected: { backgroundColor: "#1746A2", borderColor: "#1746A2" },
+  hourDisabled: { backgroundColor: "#F3F4F6", borderColor: "#D1D5DB" },
+  hourDisabledText: { color: "#9CA3AF" },
+  hourAvailable: { backgroundColor: "#ECFDF3", borderColor: "#16A34A" },
+  hourAvailableText: { color: "#15803D", fontWeight: "600" },
+  hourUnavailable: { backgroundColor: "#FEF2F2", borderColor: "#DC2626" },
+  hourUnavailableText: {
+    color: "#991B1B",
+    fontWeight: "700",
+    textDecorationColor: "#7F1D1D",
+    textDecorationLine: "line-through",
+  },
+  hourSelected: { backgroundColor: "#15803D", borderColor: "#15803D" },
   hourText: { color: "#40516D", textAlign: "center" },
   hourTextSelected: { color: "#FFFFFF", fontWeight: "600" },
   selectedTime: { color: "#1746A2", fontWeight: "600", marginTop: 8 },

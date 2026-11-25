@@ -40,6 +40,22 @@ router.get('/', async (req, res) => {
               'capacidad', e.capacidad,
               'ubicacion', e.ubicacion,
               'disponible', e.disponible,
+              'equipamiento', COALESCE(
+                (
+                  SELECT jsonb_agg(
+                    jsonb_build_object(
+                      'id', eq.id,
+                      'nombre', eq.nombre,
+                      'tipo', eq.tipo,
+                      'cantidad', eq.cantidad
+                    )
+                    ORDER BY eq.nombre
+                  )
+                  FROM equipamiento eq
+                  WHERE eq.espacio_id = e.id
+                ),
+                '[]'::jsonb
+              ),
               'en_uso', EXISTS (
                 SELECT 1
                 FROM reservas r

@@ -13,6 +13,8 @@ function UtilizacionScreen() {
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
+  const [edificiosExpandido, setEdificiosExpandido] = useState(false);
+  const [espaciosExpandido, setEspaciosExpandido] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -66,35 +68,59 @@ function UtilizacionScreen() {
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Por edificio</Text>
-      {datos.porEdificio.length === 0 ? (
-        <Text style={styles.empty}>No hay datos de utilización.</Text>
-      ) : (
-        datos.porEdificio.map((edificio) => (
-          <View key={edificio.id} style={styles.card}>
-            <Text style={styles.cardTitle}>{edificio.nombre}</Text>
-            <Text style={styles.cardDetail}>
-              {edificio.espacios} espacios · {edificio.reservasActivas} reservas
-            </Text>
-            <Text style={styles.cardDetail}>
-              {edificio.horasReservadas} horas reservadas
-            </Text>
-          </View>
-        ))
-      )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: edificiosExpandido }}
+        onPress={() => setEdificiosExpandido((expandido) => !expandido)}
+        style={styles.sectionToggle}
+      >
+        <Text style={styles.sectionTitle}>Por edificio</Text>
+        <Text style={styles.sectionArrow}>
+          {edificiosExpandido ? "▴" : "▾"}
+        </Text>
+      </Pressable>
+      {edificiosExpandido
+        ? datos.porEdificio.length === 0
+          ? <Text style={styles.empty}>No hay datos de utilización.</Text>
+          : datos.porEdificio.map((edificio) => (
+              <View key={edificio.id} style={styles.card}>
+                <Text style={styles.cardTitle}>{edificio.nombre}</Text>
+                <Text style={styles.cardDetail}>
+                  {edificio.espacios} espacios · {edificio.reservasActivas} reservas
+                </Text>
+                <Text style={styles.cardDetail}>
+                  {edificio.horasReservadas} horas reservadas
+                </Text>
+              </View>
+            ))
+        : null}
 
-      <Text style={styles.sectionTitle}>Por espacio</Text>
-      {datos.espacios.map((espacio) => (
-        <View key={espacio.id} style={styles.card}>
-          <Text style={styles.cardTitle}>{espacio.nombre}</Text>
-          <Text style={styles.cardDetail}>
-            {espacio.edificioNombre} · {espacio.reservasActivas} reservas
-          </Text>
-          <Text style={styles.cardDetail}>
-            {espacio.horasReservadas} horas reservadas
-          </Text>
-        </View>
-      ))}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: espaciosExpandido }}
+        onPress={() => setEspaciosExpandido((expandido) => !expandido)}
+        style={styles.sectionToggle}
+      >
+        <Text style={styles.sectionTitle}>Por espacio</Text>
+        <Text style={styles.sectionArrow}>
+          {espaciosExpandido ? "▴" : "▾"}
+        </Text>
+      </Pressable>
+      {espaciosExpandido
+        ? datos.espacios.length === 0
+          ? <Text style={styles.empty}>No hay espacios registrados.</Text>
+          : datos.espacios.map((espacio) => (
+              <View key={espacio.id} style={styles.card}>
+                <Text style={styles.cardTitle}>{espacio.nombre}</Text>
+                <Text style={styles.cardDetail}>
+                  {espacio.edificioNombre} · {espacio.reservasActivas} reservas
+                </Text>
+                <Text style={styles.cardDetail}>
+                  {espacio.horasReservadas} horas reservadas
+                </Text>
+              </View>
+            ))
+        : null}
     </ScrollView>
   );
 }
@@ -104,17 +130,41 @@ const styles = StyleSheet.create({
   loader: { marginTop: 50 },
   title: { color: "#14213D", fontSize: 26, fontWeight: "700" },
   subtitle: { color: "#586579", fontSize: 15, marginBottom: 16, marginTop: 6 },
-  summary: { gap: 9, marginBottom: 18 },
+  summary: { flexDirection: "row", gap: 8, marginBottom: 18 },
   stat: {
+    alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderColor: "#E1E7F0",
     borderRadius: 12,
     borderWidth: 1,
-    padding: 14,
+    flex: 1,
+    minWidth: 0,
+    padding: 8,
   },
-  statLabel: { color: "#586579", fontSize: 13 },
-  statValue: { color: "#1746A2", fontSize: 25, fontWeight: "700", marginTop: 3 },
-  sectionTitle: { color: "#14213D", fontSize: 18, fontWeight: "700", marginBottom: 10, marginTop: 8 },
+  statLabel: {
+    color: "#586579",
+    fontSize: 13,
+    lineHeight: 16,
+    minHeight: 34,
+    textAlign: "center",
+  },
+  statValue: {
+    color: "#1746A2",
+    fontSize: 22,
+    fontWeight: "700",
+    marginTop: 3,
+    textAlign: "center",
+  },
+  sectionToggle: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    marginTop: 8,
+    paddingVertical: 5,
+  },
+  sectionTitle: { color: "#14213D", fontSize: 18, fontWeight: "700" },
+  sectionArrow: { color: "#1746A2", fontSize: 18, fontWeight: "700" },
   card: {
     backgroundColor: "#FFFFFF",
     borderColor: "#E1E7F0",

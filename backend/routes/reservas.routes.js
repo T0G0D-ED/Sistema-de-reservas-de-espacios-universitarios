@@ -90,6 +90,68 @@ router.post('/', async (req, res, next) => {
 
 /**
  * @swagger
+ * /api/reservas/disponibilidad:
+ *   get:
+ *     summary: Consultar horarios ocupados de un espacio en un rango de fechas
+ *     tags: [Reservas]
+ *     parameters:
+ *       - in: query
+ *         name: espacioId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: fechaInicio
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: fechaFin
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *     responses:
+ *       200:
+ *         description: Intervalos ocupados, sin información personal
+ *       400:
+ *         description: Parámetros inválidos
+ */
+router.get('/disponibilidad', async (req, res, next) => {
+  try {
+    const espacioId = Number(req.query.espacioId);
+    const { fechaInicio, fechaFin } = req.query;
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+
+    if (
+      !Number.isInteger(espacioId) ||
+      espacioId <= 0 ||
+      typeof fechaInicio !== 'string' ||
+      typeof fechaFin !== 'string' ||
+      !Number.isFinite(inicio.getTime()) ||
+      !Number.isFinite(fin.getTime()) ||
+      fin <= inicio
+    ) {
+      return res
+        .status(400)
+        .json({ error: 'Parámetros de disponibilidad inválidos.' });
+    }
+
+    const horarios = await reservasService.obtenerDisponibilidad(
+      espacioId,
+      fechaInicio,
+      fechaFin,
+    );
+    res.json(horarios);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
  * /api/reservas:
  *   get:
  *     summary: Listar reservas (todas para ADMIN/DOCENTE, propias para ESTUDIANTE)

@@ -172,6 +172,7 @@ Si cambias `backend/.env`, recrea los servicios para aplicar la configuración:
 docker compose --env-file backend/.env up -d --force-recreate
 ```
 
+El seed incluye espacios y equipamiento de ejemplo, evita duplicarlos al ejecutarse nuevamente y crea la cuenta de administración de desarrollo:
 ## Ejecución local sin Docker (opcional)
 
 Útil si quieres ejecutar backend/frontend directamente con Node.js en tu máquina.
@@ -238,7 +239,7 @@ Al ejecutar `npm run seed` en el backend se cargan datos de ejemplo (espacios, e
 
 | Usuario | Contraseña |
 |---------|------------|
-| `admin` | `admin123` |
+| `admin` | `admin` |
 
 > ⚠️ Credenciales solo para desarrollo local. No expongas esta cuenta en un despliegue real.
 
@@ -354,6 +355,7 @@ Integrada en el **backend** para enviar correos transaccionales de confirmación
 ### Evidencia de pruebas
 
 - **Flujo end-to-end:** Login → Consulta de espacios → Creación de reserva → Visualización en "Mis Reservas".
+- **Aplicación móvil Hito 4:** el equipo comprobó el funcionamiento de la aplicación.
 - **Regla de negocio (conflicto):** intentar reservar en un horario ya ocupado devuelve `409 Conflict`.
 - **Regla de negocio (feriado):** intentar reservar un sábado o feriado nacional devuelve `400 Bad Request`.
 - **Persistencia SQL:** los datos se mantienen tras reiniciar los contenedores.
@@ -365,7 +367,7 @@ Integrada en el **backend** para enviar correos transaccionales de confirmación
 
 - El sistema asume que las fechas enviadas desde el frontend están en formato ISO 8601 (UTC).
 - La API de feriados del gobierno puede presentar lentitud ocasional; el sistema la mitiga con caché en memoria, pero en casos extremos de caída prolongada podría requerir actualización manual del respaldo local.
-- El dashboard de utilización es consultable solo por usuarios con rol `ADMIN`.
+- El dashboard de utilización es consultable por usuarios con rol `ADMIN` o `DOCENTE`.
 
 ## Uso de Inteligencia Artificial
 
