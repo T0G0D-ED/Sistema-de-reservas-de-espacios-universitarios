@@ -60,6 +60,9 @@ function IconoEspacio({ tipo }) {
 function TarjetaEspacio({ espacio, onReservar }) {
   const indiceFondo =
     (Number(espacio.id) || 0) % fondosPorEspacio.length;
+  const equipamiento = Array.isArray(espacio.equipamiento)
+    ? espacio.equipamiento
+    : [];
 
   return (
     <View style={styles.card}>
@@ -82,6 +85,16 @@ function TarjetaEspacio({ espacio, onReservar }) {
         <Text style={styles.cardDetail}>
           {espacio.edificio_nombre || "Edificio"}
         </Text>
+        {equipamiento.length > 0 ? (
+          <Text style={styles.cardDetail}>
+            Equipamiento:{" "}
+            {equipamiento
+              .map(({ nombre, cantidad }) =>
+                cantidad > 1 ? `${nombre} (${cantidad})` : nombre,
+              )
+              .join(", ")}
+          </Text>
+        ) : null}
         <View style={styles.cardFooter}>
           <Text style={styles.cardDetail}>Capacidad: {espacio.capacidad}</Text>
           {espacio.ubicacion ? (

@@ -18,6 +18,20 @@ export const reservasRepo = {
     return rows[0] || null; 
   },
 
+  async listarDisponibilidad(espacioId, fechaInicio, fechaFin) {
+    const query = `
+      SELECT fecha_inicio, fecha_fin
+      FROM reservas
+      WHERE espacio_id = $1
+        AND estado IN ('PENDIENTE', 'APROBADA')
+        AND fecha_inicio < $3
+        AND fecha_fin > $2
+      ORDER BY fecha_inicio ASC
+    `;
+    const { rows } = await pool.query(query, [espacioId, fechaInicio, fechaFin]);
+    return rows;
+  },
+
   // 2. Crear una nueva reserva
   // el usuario solicita y el admin aprueba o rechaza 
   async crear(usuarioId, espacioId, fechaInicio, fechaFin, motivo) {

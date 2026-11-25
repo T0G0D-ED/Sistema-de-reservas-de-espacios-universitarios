@@ -64,6 +64,14 @@ export function crearReservasService({
     return await repository.listarPorUsuario(usuarioId);
   },
 
+  async obtenerDisponibilidad(espacioId, fechaInicio, fechaFin) {
+    return await repository.listarDisponibilidad(
+      espacioId,
+      fechaInicio,
+      fechaFin,
+    );
+  },
+
   async obtenerTodas() {
     return await repository.listarTodas();
   },

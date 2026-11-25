@@ -168,11 +168,11 @@ Para cargar datos y usuarios de prueba (opcional):
 docker compose --env-file backend/.env exec backend npm run seed
 ```
 
-El seed incluye espacios de ejemplo y evita duplicarlos al ejecutarse nuevamente. También crea la cuenta de administración de desarrollo:
+El seed incluye espacios y equipamiento de ejemplo, evita duplicarlos al ejecutarse nuevamente y crea la cuenta de administración de desarrollo:
 
 | Usuario | Contraseña |
 |---------|------------|
-| `admin` | `admin123` |
+| `admin` | `admin` |
 
 > ⚠️ Esta contraseña pública es solo para desarrollo local: no expongas esa cuenta en un despliegue real.
 
@@ -211,6 +211,7 @@ docker compose --env-file backend/.env up -d --force-recreate
 ### Evidencia de pruebas
 
 - **Flujo end-to-end:** Login → Consulta de espacios → Creación de reserva → Visualización en "Mis Reservas".
+- **Aplicación móvil Hito 4:** el equipo comprobó el funcionamiento de la aplicación.
 - **Regla de negocio (conflicto):** intentar reservar en un horario ya ocupado devuelve `409 Conflict`.
 - **Regla de negocio (feriado):** intentar reservar un sábado o feriado nacional devuelve `400 Bad Request`.
 - **Persistencia SQL:** los datos se mantienen tras reiniciar los contenedores.
@@ -222,7 +223,7 @@ docker compose --env-file backend/.env up -d --force-recreate
 
 - El sistema asume que las fechas enviadas desde el frontend están en formato ISO 8601 (UTC).
 - La API de feriados del gobierno puede presentar lentitud ocasional; el sistema la mitiga con caché en memoria, pero en casos extremos de caída prolongada podría requerir actualización manual del respaldo local.
-- El dashboard de utilización es consultable solo por usuarios con rol `ADMIN`.
+- El dashboard de utilización es consultable por usuarios con rol `ADMIN` o `DOCENTE`.
 
 ---
 
@@ -237,3 +238,4 @@ De acuerdo con las normativas del curso, se detalla el uso de herramientas de IA
 | **Qwen / ChatGPT** | Lógica de validación de feriados | "Crea una función en Node.js que valide si una fecha es feriado en Chile usando la API de digital.gob.cl, con caché y fallback" | Archivo `utils/feriados.js` con lógica de caché en memoria. | Se probó manualmente con fechas de 2026 y se simuló la caída de la API para verificar el fallback. | Importancia de no bloquear el sistema principal si una API pública externa falla (resiliencia). |
 | **Qwen / ChatGPT** | Middleware global de errores | "Crea un middleware global de Express que traduzca errores de PostgreSQL a mensajes seguros sin exponer trazas internas" | Archivo `utils/errores.js` con clase `AppError` y manejo de códigos SQL. | Se probaron errores de duplicado, FK y JWT para verificar que los mensajes sean claros y no expongan la estructura de la BD. | Diferencia entre errores operacionales esperados y bugs de código, y cómo manejarlos sin exponer detalles internos. |
 | **ChatGPT / Gemini** | Generación de DTOs y validaciones | "Crea un DTO en NestJS para validar la reserva de un espacio..." | Código base del DTO con class-validator. | Se ajustaron reglas de solapamiento de horario. | Manejo avanzado de decoradores de validación personalizados. |
+| **GitHub Copilot** | Revisión de rúbrica e implementación de mejoras para la app móvil del Hito 4 | "Revisar el Hito 4 y completar la consulta de equipamiento y los flujos/documentación móvil sin crear otro backend." | Consulta de equipamiento por la API compartida y visualización en React Native; ajustes de disponibilidad, validación de fechas y secciones plegables. | El equipo comprobó el funcionamiento de la aplicación móvil; se generó el bundle Android y se ejecutaron las pruebas del backend. | Uso de la API compartida para mantener los datos del cliente móvil alineados con el backend. |

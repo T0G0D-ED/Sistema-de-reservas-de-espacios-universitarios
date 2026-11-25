@@ -69,6 +69,31 @@ async function seed() {
       espaciosInsertados += resultado.rowCount;
     }
 
+    const equipamientos = [
+      ['Sala B-101', 'B', 'Proyector', 'AUDIOVISUAL', 1],
+      ['Sala B-101', 'B', 'Pizarrón', 'MOBILIARIO', 1],
+      ['Sala B-203', 'B', 'Mesas modulares', 'MOBILIARIO', 1],
+      ['Laboratorio B-205', 'B', 'Puestos de trabajo', 'COMPUTACIÓN', 30],
+      ['Sala C-201', 'C', 'Equipamiento audiovisual', 'AUDIOVISUAL', 1],
+    ];
+
+    for (const [nombreEspacio, codigoEdificio, nombre, tipo, cantidad] of equipamientos) {
+      await pool.query(
+        `INSERT INTO equipamiento (espacio_id, nombre, tipo, cantidad)
+         SELECT e.id, $3::varchar, $4::varchar, $5::int
+         FROM espacios e
+         JOIN edificios b ON b.id = e.edificio_id
+         WHERE e.nombre = $1::varchar AND b.codigo = $2::varchar
+           AND NOT EXISTS (
+             SELECT 1
+             FROM equipamiento existente
+             WHERE existente.espacio_id = e.id
+               AND existente.nombre = $3::varchar
+           )`,
+        [nombreEspacio, codigoEdificio, nombre, tipo, cantidad]
+      );
+    }
+
     const { rows } = await pool.query('SELECT COUNT(*)::int AS total FROM espacios');
     console.log(`✅ Seed completado. Espacios insertados: ${espaciosInsertados}. Total: ${rows[0].total}.`);
     
